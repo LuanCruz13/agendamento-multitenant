@@ -23,4 +23,10 @@ export class AvailabilityService {
         });
     }
 
+    findAll(organizationId: string){
+        return this.prisma.availability.findMany({
+            where: { organizationId },
+        });
+    }
+
 }

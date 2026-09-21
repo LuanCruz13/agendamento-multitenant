@@ -19,5 +19,10 @@ export class AvailabilityController {
         return this.availabilityService.create(dto, req.user.organizationId)
     }
 
+    @Get()
+    findAll (@Req() req: RequestWithUser){
+        return this.availabilityService.findAll(req.user.organizationId);
+    }
+
 }
 
