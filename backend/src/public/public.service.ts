@@ -1,12 +1,70 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateBookingDto } from './dto/create-booking.dto';
+import { Prisma } from '@prisma/client';
 
 const SLOT_DURATION_MINUTES = 60;
+
 
 
 @Injectable()
 export class PublicService {
     constructor(private readonly prisma: PrismaService){}
+
+    async createBooking(slug: string, dto: CreateBookingDto){
+        const scheduledAt = new Date(dto.scheduledAt);
+
+        if (isNaN(scheduledAt.getTime())){
+            throw new BadRequestException('scheduledAt inválido');
+        }
+
+        if (scheduledAt.getUTCMinutes() % SLOT_DURATION_MINUTES !== 0 || scheduledAt.getUTCSeconds() !== 0){
+            throw new BadRequestException('scheduledAt precisa coincidir com um horário de slot válido');
+        }
+        
+        const organization = await this.prisma.organization.findUnique({ where: {slug}});
+        if (!organization){
+            throw new NotFoundException('Organização não encontrada');
+        }
+
+        const weekday = scheduledAt.getUTCDay();
+        const targetMinutes = scheduledAt.getUTCHours() * 60 + scheduledAt.getUTCMinutes();
+
+        const availabilities = await this.prisma.availability.findMany({
+            where: {organizationId: organization.id, weekday}
+        })
+
+        const withinAvailability = availabilities.some((availability) => {
+            const startMinutes = availability.startTime.getUTCHours() * 60 + availability.startTime.getUTCMinutes();
+            const endMinutes = availability.endTime.getUTCHours() * 60 + availability.endTime.getUTCMinutes();
+            return targetMinutes >= startMinutes && targetMinutes < endMinutes;
+        })
+
+        if (!withinAvailability){
+            throw new BadRequestException('horário fora da disponibilidade da organização');
+        }
+
+        try {
+            return await this.prisma.booking.create({
+                data: {
+                    organizationId: organization.id,
+                    clientName: dto.clientName,
+                    clientEmail: dto.clientEmail,
+                    clientPhone: dto.clientPhone,
+                    scheduledAt,
+                }
+            });
+        } catch (error){
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002'){
+                throw new ConflictException('esse horário já foi reservado')
+            }
+            throw error
+        }
+    }
+
+
+
+
 
     async getSlots(slug: string, dateParam: string){
         const date = new Date(dateParam);
@@ -63,7 +121,6 @@ export class PublicService {
         }
 
         return slots;
-
     }
 
         

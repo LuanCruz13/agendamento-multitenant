@@ -86,6 +86,7 @@ model Booking {
 
   @@index([organizationId])
   @@index([organizationId, scheduledAt])
+  @@unique([organizationId, scheduledAt])
   @@map("bookings")
 }
 
