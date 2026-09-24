@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
+import { UpdateOrganizationDto } from './dto/update-organization.dto';
 
 
 @Injectable()
@@ -41,5 +42,19 @@ export class OrganizationsService {
         throw error;
     }
 }
+
+    async update(organizationId: string, dto: UpdateOrganizationDto){
+        try{
+            return await this.prisma.organization.update({
+                where: { id: organizationId },
+                data: dto,
+            });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002'){
+                throw new ConflictException('slug já está em uso')
+            }
+            throw error;
+        }
+    }
 
 }
