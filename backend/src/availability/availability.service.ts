@@ -53,4 +53,14 @@ export class AvailabilityService {
 
     }
 
+    async remove(id: string, organizationId: string){
+        const result = await this.prisma.availability.deleteMany({
+            where: { id, organizationId},
+        });
+
+        if(result.count === 0){
+            throw new NotFoundException('disponibilidade não encontrada')
+        }
+    }
+
 }
