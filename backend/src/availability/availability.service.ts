@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAvailabilityDto } from './dto/create-availability.dto';
 
@@ -27,6 +27,30 @@ export class AvailabilityService {
         return this.prisma.availability.findMany({
             where: { organizationId },
         });
+    }
+
+    async update(id: string, organizationId: string, dto: CreateAvailabilityDto){
+        
+        if (new Date(dto.endTime) <= new Date(dto.startTime)){
+            throw new BadRequestException('endTime precisa ser depois de startTime');
+        }
+
+        const result = await this.prisma.availability.updateMany({
+            where: { id, organizationId},
+            data: {
+                weekday: dto.weekday,
+                startTime: dto.startTime,
+                endTime: dto.endTime,
+            },
+        });
+
+        if (result.count === 0){
+            throw new NotFoundException('disponibilidade não encontrada')
+        }
+
+        return this.prisma.availability.findUnique({ where: { id }});
+
+
     }
 
 }

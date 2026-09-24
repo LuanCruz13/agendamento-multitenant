@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, UseGuards, Param, Put } from '@nestjs/common';
 import { Request } from 'express';
 import { AvailabilityService } from './availability.service';
 import { CreateAvailabilityDto } from './dto/create-availability.dto';
@@ -22,6 +22,11 @@ export class AvailabilityController {
     @Get()
     findAll (@Req() req: RequestWithUser){
         return this.availabilityService.findAll(req.user.organizationId);
+    }
+
+    @Put(':id')
+    update(@Param('id') id: string, @Body() dto: CreateAvailabilityDto, @Req() req: RequestWithUser){
+        return this.availabilityService.update(id, req.user.organizationId, dto);
     }
 
 }
