@@ -1,7 +1,14 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, HttpCode, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { Request } from 'express';
+
+
+interface RequestWithUser extends Request{
+    user: { sub: string; organizationId: string; role: string;}
+}
 
 
 @Controller('auth')
@@ -16,6 +23,13 @@ export class AuthController {
     @Post('refresh')
     refresh(@Body() dto: RefreshTokenDto){
         return this.authService.refresh(dto);
+    }
+
+    @Post('logout')
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(200)
+    logout(@Req() req: RequestWithUser){
+        return this.authService.logout(req.user.sub);
     }
 
 }
