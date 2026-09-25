@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UpdateBookingDto } from './dto/update-booking.dto';
 
 @Injectable()
 export class BookingsService {
@@ -11,4 +12,20 @@ export class BookingsService {
             orderBy: { scheduledAt: 'asc' },
         });
     }
+
+    async updateStatus(id: string, organizationId: string, dto: UpdateBookingDto){
+        const result = await this.prisma.booking.updateMany({
+            where: { id, organizationId },
+            data: { status: dto.status},
+        });
+
+
+        if (result.count === 0){
+            throw new NotFoundException('agendamento não encontrado');
+        }
+
+        return this.prisma.booking.findUnique({ where: { id }});
+
+    }
+
 }
