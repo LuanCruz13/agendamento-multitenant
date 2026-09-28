@@ -3,13 +3,18 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { Prisma } from '@prisma/client';
 
+import { EmailService } from 'src/email/email.service';
+
 const SLOT_DURATION_MINUTES = 60;
 
 
 
 @Injectable()
 export class PublicService {
-    constructor(private readonly prisma: PrismaService){}
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly emailService: EmailService,
+    ){}
 
     async createBooking(slug: string, dto: CreateBookingDto){
         const scheduledAt = new Date(dto.scheduledAt);
@@ -44,8 +49,10 @@ export class PublicService {
             throw new BadRequestException('horário fora da disponibilidade da organização');
         }
 
+        let booking;
+
         try {
-            return await this.prisma.booking.create({
+            booking = await this.prisma.booking.create({
                 data: {
                     organizationId: organization.id,
                     clientName: dto.clientName,
@@ -59,6 +66,12 @@ export class PublicService {
                 throw new ConflictException('esse horário já foi reservado')
             }
             throw error
+        }
+
+        try{
+            await this.emailService.sendBookingConfirmation(booking.clientEmail, booking.clientName, booking.scheduledAt)
+        } catch (error){
+            console.error('Falha ao enviar e-mail de confirmação:', error)
         }
     }
 

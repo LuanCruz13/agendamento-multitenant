@@ -10,12 +10,13 @@ import { AuthModule } from './auth/auth.module';
 import { AvailabilityModule } from './availability/availability.module';
 import { PublicModule } from './public/public.module';
 import { BookingsModule } from './bookings/bookings.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports:[
     ConfigModule.forRoot({isGlobal: true}), 
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
-    OrganizationsModule, PrismaModule, AuthModule, AvailabilityModule, PublicModule, BookingsModule
+    OrganizationsModule, PrismaModule, AuthModule, AvailabilityModule, PublicModule, BookingsModule, EmailModule
   ],
   controllers: [AppController],
   providers: [
