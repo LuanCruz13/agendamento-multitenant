@@ -4,6 +4,7 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Request } from 'express';
+import { Throttle } from '@nestjs/throttler';
 
 
 interface RequestWithUser extends Request{
@@ -16,6 +17,7 @@ export class AuthController {
     constructor(private readonly authService: AuthService){}
 
     @Post('login')
+    @Throttle({ default: { limit: 5, ttl: 60000 } })
     login(@Body() dto: LoginDto){
         return this.authService.login(dto);
     }
