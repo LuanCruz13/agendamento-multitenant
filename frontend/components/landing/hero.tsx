@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
+import { BookingPreview } from "./booking-preview";
 
 export function Hero(){
     
@@ -44,6 +45,7 @@ export function Hero(){
                     </Button>
                 </div>
             </div>
+            <BookingPreview />
         </section>
     )
 }
