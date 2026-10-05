@@ -4,6 +4,7 @@ import { Logo } from "@/components/landing/logo";
 import { SiteHeader } from "@/components/landing/site-header";
 import { BookingPreview } from "@/components/landing/booking-preview";
 import { HowItWorks } from "@/components/landing/how-it-works";
+import { Features } from "@/components/landing/features";
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
       <SiteHeader />
       <Hero />
       <HowItWorks />
+      <Features/>
       </>
   );
 }
