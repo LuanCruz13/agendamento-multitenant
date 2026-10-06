@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Logo } from "@/components/landing/logo";
+import { AuthAside } from "@/components/auth/auth-aside";
 
 export const metadata: Metadata = {
     title: "Entrar | Agendaí",
@@ -40,6 +41,7 @@ export default function LoginPage(){
 
             <footer className="text-xs text-muted-foreground">© 2026 Agendaí</footer>
             </main>
+            <AuthAside/>
         </div>
     )
 }
