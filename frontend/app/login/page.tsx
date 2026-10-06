@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Logo } from "@/components/landing/logo";
 import { AuthAside } from "@/components/auth/auth-aside";
+import { LoginForm } from "@/components/auth/login-form";
 
 export const metadata: Metadata = {
     title: "Entrar | Agendaí",
@@ -26,6 +27,8 @@ export default function LoginPage(){
                             <p className="text-pretty text-muted-foreground">Entre para ver a agenda e os agendamentos da sua organização.</p>
                         </div>
 
+                        <LoginForm/>
+
                         <p className="text-sm text-muted-foreground">
                             Ainda não tem conta?{" "}
                             <Link
@@ -42,6 +45,7 @@ export default function LoginPage(){
             <footer className="text-xs text-muted-foreground">© 2026 Agendaí</footer>
             </main>
             <AuthAside/>
+            
         </div>
     )
 }
