@@ -1,7 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const inputClass = 
@@ -9,14 +10,21 @@ const inputClass =
 
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"
+
+
 
 export function LoginForm(){
 
+    const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
     const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string}>({});
+    const [formError, setFormError] = useState<string | null>(null);
+    const [pending, setPending] = useState(false);
 
-    function handleSubmit(event: FormEvent<HTMLFormElement>){
+    async function handleSubmit(event: FormEvent<HTMLFormElement>){
         event.preventDefault();
+        setFormError(null);
 
         const formData = new FormData (event.currentTarget);
         const email = String(formData.get("email") ?? "").trim();
@@ -43,13 +51,50 @@ export function LoginForm(){
             return;
         }
 
+        setPending(true);
 
+        try{
+            const response = await fetch(`${API_URL}/auth/login`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json" },
+                body: JSON.stringify({ email, password}),
+            });
 
+            if (!response.ok){
+                if (response.status === 401){
+                    setFormError("E-mail ou senha incorretos.");
+                } else if (response.status === 429){
+                    setFormError("Muitas tentativas. Aguarde um minuto e tente de novo.");
+                } else {
+                    setFormError("Algo deu errado. Tente novamente.")
+                }
+                return;
+            }
+
+            const data = await response.json();
+            localStorage.setItem("accessToken", data.accessToken);
+            localStorage.setItem("refreshToken", data.refreshToken);
+
+            router.push("/painel");
+        } catch {
+            setFormError("Não foi possível conectar ao servidor. Verifique se a API está rodando.")
+        } finally {
+            setPending(false);
+        }
     }
 
   return (
     <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <div className="flex flex-col gap-2">
+        {formError && (
+            <div
+                role="alert"
+                className="flex items-start gap-2.5 rounded-lg border border-destructive/25 bg-destructive/5 px-3 py-2.5 text-sm text-destructive"
+            >
+                <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                <p>{formError}</p>
+            </div>
+        )}
+            <div className="flex flex-col gap-2">
             <label htmlFor="email" className="text-sm font-medium">
                 E-mail
             </label>
@@ -68,9 +113,9 @@ export function LoginForm(){
                     {fieldErrors.email}
                 </p>
             )}
-        </div>
+            </div>
 
-        <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
                 <label htmlFor="password" className="text-sm font-medium">
                     Senha
@@ -111,15 +156,18 @@ export function LoginForm(){
                     {fieldErrors.password}
                 </p>
             )}
-        </div>
+            </div>
 
-        <Button type="submit" size="lg" className="mt-1 h-11 text-base">
-            Entrar
-        </Button>
-
-
-
-
+            <Button type="submit" size="lg" className="mt-1 h-11 text-base" disabled={pending}>
+                {pending ? (
+                    <>
+                        <Loader2 className="size-4 animate-spin" />
+                        Entrando...
+                    </>
+                ) : (
+                    "Entrar"
+                )}
+            </Button>
     </form>
   );
 }
