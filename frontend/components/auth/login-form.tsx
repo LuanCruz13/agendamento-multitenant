@@ -1,16 +1,25 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState} from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useForm } from "react-hook-form";
 
 const inputClass = 
     "h-11 w-full rounded-lg border border-input bg-card px-3 text-base text-foreground shadow-xs outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20 aria-invalid:border-destructive aria-invalid:ring-destructive/15 md:text-sm"
 
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"
+
+const loginSchema = z.object({
+    email: z.string().trim().min(1, "Informe seu e-mail.").pipe(z.email("E-mail inválido.")),
+    password: z.string().min(1, "Informe sua senha."),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>
 
 
 
@@ -18,55 +27,35 @@ export function LoginForm(){
 
     const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
-    const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string}>({});
     const [formError, setFormError] = useState<string | null>(null);
     const [pending, setPending] = useState(false);
 
-    async function handleSubmit(event: FormEvent<HTMLFormElement>){
-        event.preventDefault();
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<LoginFormValues>({
+        resolver: zodResolver(loginSchema),
+    });
+
+    async function onSubmit(values: LoginFormValues){
         setFormError(null);
-
-        const formData = new FormData (event.currentTarget);
-        const email = String(formData.get("email") ?? "").trim();
-        const password = String(formData.get("password") ?? "");
-
-        const errors: { 
-            email?: string;
-            password?: string
-        } = {};
-
-        if (!email){
-            errors.email = "Informe seu e-mail.";
-        } else if (!EMAIL_PATTERN.test(email)){
-            errors.email = "E-mail inválido."
-        }
-
-        if(!password){
-            errors.password = "Informe sua senha."
-        }
-
-        setFieldErrors(errors);
-
-        if (Object.keys(errors).length > 0){
-            return;
-        }
-
         setPending(true);
 
         try{
             const response = await fetch(`${API_URL}/auth/login`, {
                 method: "POST",
-                headers: {"Content-Type": "application/json" },
-                body: JSON.stringify({ email, password}),
+                headers: { "Content-Type": "application/json"},
+                body: JSON.stringify(values),
             });
 
             if (!response.ok){
-                if (response.status === 401){
+                if(response.status === 401){
                     setFormError("E-mail ou senha incorretos.");
                 } else if (response.status === 429){
-                    setFormError("Muitas tentativas. Aguarde um minuto e tente de novo.");
+                    setFormError("Muitas tentativas. Aguarde um minuto e tente de novo.")
                 } else {
-                    setFormError("Algo deu errado. Tente novamente.")
+                    setFormError("Algo deu errado. Tente novamente. ");
                 }
                 return;
             }
@@ -77,14 +66,14 @@ export function LoginForm(){
 
             router.push("/painel");
         } catch {
-            setFormError("Não foi possível conectar ao servidor. Verifique se a API está rodando.")
+            setFormError("Não foi possível conectar ao servidor. Verifique se a API está rodando.");
         } finally {
             setPending(false);
         }
     }
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
         {formError && (
             <div
                 role="alert"
@@ -100,17 +89,17 @@ export function LoginForm(){
             </label>
             <input 
                 id="email"
-                name="email"
                 type="email"
                 autoComplete="email"
                 placeholder="voce@seunegocio.com"
-                aria-invalid={fieldErrors.email ? true : undefined}
-                aria-describedby={fieldErrors.email ? "email-error" : undefined}
+                aria-invalid={errors.email ? true : undefined}
+                aria-describedby={errors.email ? "email-error" : undefined}
                 className={inputClass}
+                {...register("email")}
             />
-            {fieldErrors.email && (
+            {errors.email && (
                 <p id="email-error" className="text-sm text-destructive">
-                    {fieldErrors.email}
+                    {errors.email.message}
                 </p>
             )}
             </div>
@@ -132,13 +121,13 @@ export function LoginForm(){
             <div className="relative">
                 <input
                     id="password"
-                    name="password"
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     placeholder="Sua senha"
-                    aria-invalid={fieldErrors.password ? true : undefined}
-                    aria-describedby={fieldErrors.password ? "password-error" : undefined}
+                    aria-invalid={errors.password ? true : undefined}
+                    aria-describedby={errors.password ? "password-error" : undefined}
                     className={`${inputClass} pr-11`}
+                    {...register("password")}
                 />
                 <button
                     type="button"
@@ -151,9 +140,9 @@ export function LoginForm(){
                     {showPassword ? <EyeOff className="size-4"/> : <Eye className="size-4" />}
                 </button>
             </div>
-            {fieldErrors.password && (
+            {errors.password && (
                 <p id="password-error" className="text-sm text-destructive">
-                    {fieldErrors.password}
+                    {errors.password.message}
                 </p>
             )}
             </div>
