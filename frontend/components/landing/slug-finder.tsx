@@ -1,31 +1,46 @@
 "use client"
 
-import { useState, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import z from "zod";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
+
+const slugSchema = z.object({
+    slug: z
+        .string()
+        .trim()
+        .toLowerCase()
+        .pipe(
+            z.string().regex(
+                SLUG_PATTERN,
+                "Use apenas letras minúsculas, números e hífens. Ex.: studio-bela"
+            )
+        ),
+});
+
+type SlugFormValues = z.infer<typeof slugSchema>;
+
 export function SlugFinder(){
 
-    const router = useRouter();
-    const [slug, setSlug] = useState("");
-    const [error, setError] = useState<string | null>(null);
+   const router = useRouter();
 
-    function handleSubmit(event: SubmitEvent<HTMLFormElement>){
-        event.preventDefault();
-        const normalized = slug.trim().toLowerCase();
+   const {
+        register,
+        handleSubmit,
+        formState: { errors },
+   } = useForm<SlugFormValues>({
+        resolver: zodResolver(slugSchema),
+   })
 
-        if (!SLUG_PATTERN.test(normalized)){
-            setError("Use apenas letras minúsculas, números e hífens. Ex.: studio-bela");
-            return;
-        }
-
-        setError(null);
-        router.push("/agendar/" + normalized);
-    }
+   function onSubmit(values: SlugFormValues){
+    router.push("/agendar/" + values.slug);
+   }
 
 
     return(
@@ -38,7 +53,7 @@ export function SlugFinder(){
                     <p className="mt-3 text-primary-foreground/75">Digite o endereço do estabelecimento para ver os horários disponíveis.</p>
                 </div>
 
-                <form noValidate onSubmit={handleSubmit} className="w-full max-w-md">
+                <form noValidate onSubmit={handleSubmit(onSubmit)} className="w-full max-w-md">
                     <label htmlFor="slug" className="text-sm font-medium text-primary-foreground/85">
                         Endereço do estabelecimento
                     </label>
@@ -49,14 +64,13 @@ export function SlugFinder(){
                             </span>
                             <input
                                 id="slug"
-                                value={slug}
-                                onChange={(event) => setSlug(event.target.value)}
                                 placeholder="studio-bela"
                                 autoComplete="off"
                                 spellCheck={false}
-                                aria-invalid={error ? true : undefined}
-                                aria-describedby={error ? "slug-error" : undefined}
+                                aria-invalid={errors.slug ? true : undefined}
+                                aria-describedby={errors.slug ? "slug-error" : undefined}
                                 className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm outline-none placeholder:text-muted-foreground/60"
+                                {...register("slug")}
                             />
                         </div>
                         <Button
@@ -67,9 +81,9 @@ export function SlugFinder(){
                             <ArrowRight/>
                         </Button>
                     </div>     
-                    {error && (
+                    {errors.slug && (
                         <p id="slug-error" role="alert" className="mt-2 text-sm text-accent">
-                            {error}
+                            {errors.slug.message}
                         </p>
                     )}
                 </form>
