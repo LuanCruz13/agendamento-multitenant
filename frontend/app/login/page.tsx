@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function LoginPage(){
     return(
-        <div className="grid min-h-dvh lg:grid-cols-[1fr_1.05fr]">
+        <div className="grid min-h-dvh grid-cols-1 lg:grid-cols-[1fr_1.05fr]">
             <main className="flex flex-col px-4 py-6 md:px-10">
                 <header>
                     <Link href="/" aria-label="Agendaí, página inicial" className="w-fit">
