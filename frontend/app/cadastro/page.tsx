@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/landing/logo";
 import { AuthAside } from "@/components/auth/auth-aside";
+import { SignupForm } from "@/components/auth/signup-form";
 
 export const metadata: Metadata = {
     title: "Criar conta | Agendaí ",
@@ -28,6 +29,8 @@ export default function CadastroPage(){
                                 Cadastre seu negócio e escolha o link que você vai mandar para os clientes.
                             </p>
                         </div>
+
+                        <SignupForm />
 
                         <p className="text-sm text-muted-foreground">
                             Já tem conta?{" "}
