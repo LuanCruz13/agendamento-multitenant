@@ -6,9 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SLUG_REGEX } from "@/lib/slug";
 
 
-const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 
 const slugSchema = z.object({
@@ -18,7 +18,7 @@ const slugSchema = z.object({
         .toLowerCase()
         .pipe(
             z.string().regex(
-                SLUG_PATTERN,
+                SLUG_REGEX,
                 "Use apenas letras minúsculas, números e hífens. Ex.: studio-bela"
             )
         ),
