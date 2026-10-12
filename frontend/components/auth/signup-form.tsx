@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,9 +20,15 @@ import {
 } from "@/components/ui/input-group";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
-import { SLUG_REGEX } from "@/lib/slug";
-import { Controller, useForm } from "react-hook-form";
+import { SLUG_REGEX, slugify } from "@/lib/slug";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
+
+const API_URL= process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"
 
 
 const controlClass = "h-11 bg-card text-base shadow-xs md:text-sm"
@@ -47,9 +53,15 @@ const signupSchema = z.object({
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 export function SignupForm(){
+    const router = useRouter();
+    
     const [showPassword, setShowPassword] = useState(false);
+    const [slugEdited, setSlugEdited] = useState(false);
+    const [formError, setFormError] = useState<string | null>(null);
+    const [pending, setPending] = useState(false);
 
-    const { control, handleSubmit } = useForm<SignupFormValues>({
+
+    const { control, handleSubmit, setValue } = useForm<SignupFormValues>({
         resolver: zodResolver(signupSchema),
         defaultValues: {
             name: "",
@@ -60,9 +72,75 @@ export function SignupForm(){
         }
     });
 
+    const name = useWatch({ control, name: "name"});
+
+    useEffect(() => {
+        if (!slugEdited){
+            setValue("slug", slugify(name));
+        }
+    }, [name, slugEdited, setValue]);
+
+    async function onSubmit (values: SignupFormValues) {
+        setFormError(null);
+        setPending(true);
+
+        try {
+            const response = await fetch(`${API_URL}/organizations`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: values.name,
+                    slug: values.slug,
+                    ownerName: values.ownerName,
+                    ownerEmail: values.email,
+                    ownerPassword: values.password,
+                }),
+            });
+
+            if (!response.ok){
+                if (response.status === 409){
+                    setFormError("Esse nome de negócio ou email já está em uso. ");
+                } else {
+                    setFormError("Algo deu errado. Tente novamnete.");
+                }
+                return;
+            }
+
+            const loginResponse = await fetch(`${API_URL}/auth/login`, {
+                method: "POST",
+                headers: { "Content-type": "application/json" },
+                body: JSON.stringify({ email: values.email, password: values.password}),
+            });
+
+            if (!loginResponse.ok){
+                setFormError("Conta criada! Faça login para continuar.");
+                return;
+            }
+
+            const data = await loginResponse.json();
+            localStorage.setItem("accessToken", data.accessToken);
+            localStorage.setItem("refreshToken", data.refreshToken);
+
+            router.push("/painel/disponibilidade");
+        } catch {
+            setFormError("Não foi possível conectar ao servidor. Verifique se a API está rodando.");
+        } finally {
+            setPending(false);
+        }
+    }
+
 
     return (
-        <form noValidate onSubmit={handleSubmit((data) => console.log(data))} className="flex flex-col gap-5">
+        <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+
+            {formError && (
+                <Alert variant="destructive">
+                    <AlertCircle />
+                    <AlertDescription>{formError}</AlertDescription>
+                </Alert>
+            )}
+
+
             <FieldGroup className="gap-5">
                 <Controller
                     name="name"
@@ -120,6 +198,10 @@ export function SignupForm(){
                                     spellCheck={false}
                                     autoCapitalize="none"
                                     className="pl-0"
+                                    onChange={(e) => {
+                                        setSlugEdited(true);
+                                        field.onChange(e);
+                                    }}
                                 />
                             </InputGroup>
                             <FieldError errors={[fieldState.error]} />
@@ -184,8 +266,15 @@ export function SignupForm(){
                 />
             </FieldGroup>
 
-            <Button type="submit" size="lg" className="mt-1 h-11 text-base">
-                Criar minha organização
+            <Button type="submit" size="lg" className="mt-1 h-11 text-base" disabled={pending}>
+                {pending ? (
+                    <>
+                        <Spinner/>
+                        Criando...
+                    </>
+                ): (
+                    "Criar minha organização"
+                )}
             </Button>
         </form>
     )
