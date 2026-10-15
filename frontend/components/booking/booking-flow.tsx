@@ -1,11 +1,15 @@
 "use client"
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DayPicker } from "./day-picker";
 import { SlotPicker } from "./slot-picker";
 import { StepTitle } from "./step-title";
-import { addDays, startOfToday, formatLongDate, formatSlotRange } from "@/lib/dates";
+import { BookingNotFound } from "./booking-not-found";
+import { addDays, startOfToday, formatLongDate, formatSlotRange, toDateParam } from "@/lib/dates";
 import { CalendarCheck, Clock } from "lucide-react";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+
 
 type BookingFlowProps = {
     slug: string;
@@ -14,18 +18,51 @@ type BookingFlowProps = {
 
 export function BookingFlow({ slug }: BookingFlowProps){
 
-        const exampleSlots = [
-            "2026-10-14T09:00:00.000Z",
-            "2026-10-14T10:00:00.000Z",
-            "2026-10-14T11:00:00.000Z",
-            "2026-10-14T14:00:00.000Z",
-            "2026-10-14T16:00:00.000Z",
-            "2026-10-14T17:00:00.000Z",
-        ];
-
         const [weekStart, setWeekStart] = useState(() => startOfToday());
         const [selectedDate, setSelectedDate] = useState(() => startOfToday());
         const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+        const [status, setStatus] = useState<"loading" | "ready" | "error" | "not-found">("loading")
+        const [slots, setSlots] = useState<string[]>([]);
+        const [retryKey, setRetryKey] = useState(0);
+
+        useEffect(() => {
+            let cancelled = false;
+
+            async function fetchSlots(){
+                setStatus("loading");
+                setSelectedSlot(null);
+
+                try{
+                    const response = await fetch(
+                        `${API_URL}/public/${slug}/slots?date=${toDateParam(selectedDate)}`
+                    );
+
+                    if (cancelled) return;
+
+                    if (response.status === 404){
+                        setStatus("not-found");
+                        return;
+                    }
+
+                    if(!response.ok){
+                        setStatus("error");
+                        return;
+                    }
+
+                    const data: string[] = await response.json();
+                    setSlots(data);
+                    setStatus("ready");
+                } catch {
+                    if (!cancelled) setStatus("error");
+                }
+            }
+
+            fetchSlots();
+
+            return () => {
+                cancelled = true;
+            };
+        }, [slug, selectedDate, retryKey]);
 
 
         function handleSelectedDate(date: Date){
@@ -47,8 +84,16 @@ export function BookingFlow({ slug }: BookingFlowProps){
             setSelectedSlot(null);
         }
 
+        function handleRetry(){
+            setRetryKey((key) => key + 1);
+        }
+
         const longDate = formatLongDate(selectedDate);
         const capitalizedLongDate = longDate.charAt(0).toUpperCase() + longDate.slice(1);
+
+        if (status === "not-found"){
+            return <BookingNotFound />;
+        }
 
     return( 
         <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-8 md:px-6 md:py-12">
@@ -76,10 +121,13 @@ export function BookingFlow({ slug }: BookingFlowProps){
                     <div className="h-px bg-border" />
                     
                     <SlotPicker
+                        status={status}
                         selectedDate={selectedDate}
-                        slots={exampleSlots}
+                        slots={slots}
                         selectedSlot={selectedSlot}
                         onSelectSlot={setSelectedSlot}
+                        onNextWeek={handleNextWeek}
+                        onRetry={handleRetry}
                     />
                 </section>
 
@@ -106,10 +154,6 @@ export function BookingFlow({ slug }: BookingFlowProps){
                         Escolha um dia e um horário para continuar.
                     </div>     
                     )}
-
-
-
-
                 </section>
             </div>
             
