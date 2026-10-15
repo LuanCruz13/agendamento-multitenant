@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react";
 import { DayPicker } from "./day-picker";
 import { SlotPicker } from "./slot-picker";
-import { StepTitle } from "./step-title";
 import { BookingNotFound } from "./booking-not-found";
-import { addDays, startOfToday, formatLongDate, formatSlotRange, toDateParam } from "@/lib/dates";
-import { CalendarCheck, Clock } from "lucide-react";
+import { addDays, startOfToday, toDateParam } from "@/lib/dates";
+import { BookingForm } from "./booking-form";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -88,9 +87,6 @@ export function BookingFlow({ slug }: BookingFlowProps){
             setRetryKey((key) => key + 1);
         }
 
-        const longDate = formatLongDate(selectedDate);
-        const capitalizedLongDate = longDate.charAt(0).toUpperCase() + longDate.slice(1);
-
         if (status === "not-found"){
             return <BookingNotFound />;
         }
@@ -132,29 +128,14 @@ export function BookingFlow({ slug }: BookingFlowProps){
                 </section>
 
                 <section className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-5 md:p-6 lg:sticky lg:top-6">
-                    <StepTitle number={3} id="step-form">Seus dados</StepTitle>
-
-                {selectedSlot ? (
-                        <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
-                            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                                <CalendarCheck className="size-4" />
-                            </span>
-                            <div className="flex flex-col">
-                            <span className="text-sm font-medium">{capitalizedLongDate}</span>
-                            <span className="text-xs text-muted-foreground">
-                                {formatSlotRange(selectedSlot)} · Studio Bela
-                            </span>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-3 rounded-xl border border-dashed border-border p-3 text-sm text-muted-foreground">
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
-                            <Clock className="size-4" />
-                        </span>
-                        Escolha um dia e um horário para continuar.
-                    </div>     
-                    )}
+                    <BookingForm
+                        selectedDate={selectedDate}
+                        selectedSlot={selectedSlot}
+                        organizationName="Studio Bela"
+                    />
                 </section>
+
+                
             </div>
             
         </main>
