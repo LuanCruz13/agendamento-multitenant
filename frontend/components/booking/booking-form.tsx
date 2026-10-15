@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,12 +34,19 @@ type BookingFormProps = {
     selectedDate: Date;
     selectedSlot: string | null;
     organizationName:string;
+    onBookingConflict: () => void;
 };
 
-export function BookingForm({ slug, selectedDate, selectedSlot, organizationName}: BookingFormProps) {
+export function BookingForm({ slug, selectedDate, selectedSlot, organizationName, onBookingConflict}: BookingFormProps) {
     const router = useRouter();
     const [formError, setFormError] = useState<string | null>(null);
     const [pending, setPending] = useState(false);
+
+    useEffect(() => {
+        if (selectedSlot){
+            setFormError(null)
+        }
+    }, [selectedSlot]);
 
     
     const { control, handleSubmit } = useForm<BookingFormValues>({
@@ -70,7 +77,8 @@ export function BookingForm({ slug, selectedDate, selectedSlot, organizationName
 
             if(!response.ok){
                 if (response.status === 409){
-                    setFormError("Esse horário acabou de ser reservado por outra pessoa. Escolha outro.");
+                    setFormError("Esse horário acabou de ser reservado por outra pessoa. Os horários foram atualizados: escolha outro.");
+                    onBookingConflict();
                 } else if (response.status === 400){
                     setFormError("Esse horário não está mais disponível. Escolha outro.")
                 } else if (response.status === 429){

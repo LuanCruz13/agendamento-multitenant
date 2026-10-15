@@ -87,6 +87,11 @@ export function BookingFlow({ slug }: BookingFlowProps){
             setRetryKey((key) => key + 1);
         }
 
+        function handleBookingConflict(){
+            setSelectedSlot(null);
+            handleRetry();
+        }
+
         if (status === "not-found"){
             return <BookingNotFound />;
         }
@@ -133,6 +138,7 @@ export function BookingFlow({ slug }: BookingFlowProps){
                         selectedDate={selectedDate}
                         selectedSlot={selectedSlot}
                         organizationName="Studio Bela"
+                        onBookingConflict={handleBookingConflict}
                     />
                 </section>
 
