@@ -1,15 +1,22 @@
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CalendarCheck, Clock } from "lucide-react";
+import { AlertCircle, CalendarCheck, Clock } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 import { StepTitle } from "./step-title";
 import { formatLongDate, formatSlotRange } from "@/lib/dates";
+import { Spinner } from "@/components/ui/spinner";
 
-const controlClass = "bg-card"
+
+const controlClass = "h-11 bg-card text-base shadow-xs md:text-sm"
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
 const bookingSchema = z.object({
     name: z.string().trim().min(1, "Informe seu nome.").max(80, "Use no máximo 80 caracteres."),
@@ -23,12 +30,17 @@ const bookingSchema = z.object({
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
 type BookingFormProps = {
+    slug: string;
     selectedDate: Date;
     selectedSlot: string | null;
     organizationName:string;
 };
 
-export function BookingForm({ selectedDate, selectedSlot, organizationName}: BookingFormProps) {
+export function BookingForm({ slug, selectedDate, selectedSlot, organizationName}: BookingFormProps) {
+    const router = useRouter();
+    const [formError, setFormError] = useState<string | null>(null);
+    const [pending, setPending] = useState(false);
+
     
     const { control, handleSubmit } = useForm<BookingFormValues>({
         resolver: zodResolver(bookingSchema),
@@ -38,8 +50,42 @@ export function BookingForm({ selectedDate, selectedSlot, organizationName}: Boo
     const longDate = formatLongDate(selectedDate);
     const capitalizedLongDate = longDate.charAt(0).toUpperCase() + longDate.slice(1);
 
-    function onSubmit(values: BookingFormValues){
-        console.log(values);
+    async function onSubmit(values: BookingFormValues){
+        if(!selectedSlot) return;
+
+        setFormError(null);
+        setPending(true);
+
+        try{
+            const response = await fetch(`${API_URL}/public/${slug}/bookings`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    clientName: values.name,
+                    clientEmail: values.email,
+                    clientPhone: values.phone || undefined,
+                    scheduledAt: selectedSlot,
+                }),
+            });
+
+            if(!response.ok){
+                if (response.status === 409){
+                    setFormError("Esse horário acabou de ser reservado por outra pessoa. Escolha outro.");
+                } else if (response.status === 400){
+                    setFormError("Esse horário não está mais disponível. Escolha outro.")
+                } else if (response.status === 429){
+                    setFormError('Muitas tentativas. Aguarde um minuto e tente de novo.');
+                } else {
+                    setFormError("Algo deu errado. Tente novamente.");
+                }
+                return;
+            }
+            router.push(`/agendar/${slug}/confirmado?horario=${encodeURIComponent(selectedSlot)}`);
+        } catch {
+            setFormError("Não foi possível conectar ao servidor. Verifique sua conexão e tente de novo.");
+        } finally {
+            setPending(false);
+        }
     }
     
     return (
@@ -47,6 +93,13 @@ export function BookingForm({ selectedDate, selectedSlot, organizationName}: Boo
             <StepTitle number={3} id="step-form" >
                 Seus Dados
             </StepTitle>
+
+            {formError && (
+                <Alert variant="destructive" className="border-destructive/25 bg-destructive/5">
+                    <AlertCircle />
+                    <AlertDescription>{formError}</AlertDescription>
+                </Alert>
+            )}
             
             {selectedSlot ? (
                 <div className="flex min-h-14 items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
@@ -136,8 +189,15 @@ export function BookingForm({ selectedDate, selectedSlot, organizationName}: Boo
                     />
                 </FieldGroup>
 
-                <Button type="submit" size="lg" className="mt-1 h-11 w-full text-base" disabled={!selectedSlot}>
-                    Confirmar agendamento
+                <Button type="submit" size="lg" className="mt-1 h-11 w-full text-base" disabled={!selectedSlot || pending}>
+                    {pending ? (
+                        <>
+                            <Spinner />
+                            Confirmando...
+                        </>
+                    ): (
+                        "Confirmar Agendamento"
+                    )}
                 </Button>
 
                 <p className="text-center text-xs text-pretty text-muted-foreground">

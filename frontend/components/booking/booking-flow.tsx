@@ -129,6 +129,7 @@ export function BookingFlow({ slug }: BookingFlowProps){
 
                 <section className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-5 md:p-6 lg:sticky lg:top-6">
                     <BookingForm
+                        slug={slug}
                         selectedDate={selectedDate}
                         selectedSlot={selectedSlot}
                         organizationName="Studio Bela"
