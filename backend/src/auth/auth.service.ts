@@ -26,7 +26,10 @@ export class AuthService {
 
 
     async login(dto: LoginDto){
-        const user = await this.prisma.user.findUnique({ where: { email: dto.email }} );
+        const user = await this.prisma.user.findUnique({ 
+            where: { email: dto.email }, 
+            include: { organization: true}
+        });
         
             if (!user){
                 throw new UnauthorizedException('credenciais inválidas');
@@ -54,7 +57,11 @@ export class AuthService {
             data: { refreshTokenHash },
         });
 
-        return { accessToken, refreshToken };
+        return { 
+            accessToken, 
+            refreshToken, 
+            organization: { name: user.organization.name, slug: user.organization.slug},
+        };
     }
 
     async refresh(dto: RefreshTokenDto){
