@@ -7,6 +7,7 @@ import { z } from "zod";
 import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
+import { setOrganization, setSession } from "@/lib/session";
 
 const inputClass = 
     "h-11 w-full rounded-lg border border-input bg-card px-3 text-base text-foreground shadow-xs outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20 aria-invalid:border-destructive aria-invalid:ring-destructive/15 md:text-sm"
@@ -61,10 +62,11 @@ export function LoginForm(){
             }
 
             const data = await response.json();
-            localStorage.setItem("accessToken", data.accessToken);
-            localStorage.setItem("refreshToken", data.refreshToken);
+            setSession({ accessToken: data.accessToken, refreshToken: data.refreshToken });
+            setOrganization(data.organization);
 
             router.push("/painel");
+
         } catch {
             setFormError("Não foi possível conectar ao servidor. Verifique se a API está rodando.");
         } finally {
