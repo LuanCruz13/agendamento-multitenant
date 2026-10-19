@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { getSession, getOrganization, clearSession } from "@/lib/session";
+import { apiFetch } from "@/lib/api";
+import { PainelSidebar } from "@/components/painel/painel-sidebar";
+import { PainelMobileHeader } from "@/components/painel/painel-mobile-header";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function PainelLayout({ children }: { children: React.ReactNode }){
     const router = useRouter();
@@ -18,5 +22,35 @@ export default function PainelLayout({ children }: { children: React.ReactNode }
 
     if (!ready) return null;
 
-    return(children)
+    const organization = getOrganization();
+    const organizationName = organization?.name ?? ""
+    const organizationSlug = organization?.slug ?? "";
+
+    async function handleLogout(){
+        try{
+            await apiFetch("/auth/logout", { method: "POST" });
+        } finally {
+            clearSession();
+            router.replace("/login");
+        }
+    }
+
+    return (
+        <div className="grid min-h-dvh grid-cols-1 lg:grid-cols-[16rem_1fr]">
+            <PainelSidebar
+                organizationName={organizationName}
+                organizationSlug={organizationSlug}
+                onLogout={handleLogout}
+            />
+            <div className="flex min-w-0 flex-col">
+                <PainelMobileHeader
+                    organizationName={organizationName}
+                    organizationSlug={organizationSlug}
+                    onLogout={handleLogout}
+                />
+                {children}
+                <Toaster />
+            </div>
+        </div>
+    )
 }
