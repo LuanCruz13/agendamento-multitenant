@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { getOrganization } from "@/lib/session";
+import { toast } from "sonner";
 import { Empty, EmptyContent, EmptyDescription, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 
 
@@ -117,6 +118,16 @@ export default function AgendamentosPage() {
         setRetryKey((key) => key + 1);
     }
 
+    async function handleCopyLink() {
+        const url = `${window.location.origin}/agendar/${organizationSlug}`;
+        try {
+            await navigator.clipboard.writeText(url);
+            toast.success("Link copiado.");
+        } catch {
+            toast.error("Não foi possível copiar. Selecione o link e copie manualmente.");
+        }
+    }
+
     return (
         <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8 md:px-8 md:py-10">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -178,7 +189,7 @@ export default function AgendamentosPage() {
                                 <span className="min-w-0 flex-1 truncate text-left text-sm">
                                     {host}/agendar/<span className="font-medium">{organizationSlug}</span>
                                 </span>
-                                <Button size="sm" type="button" onClick={() => {}} className="h-8 gap-1.5">
+                                <Button size="sm" type="button" onClick={handleCopyLink} className="h-8 gap-1.5">
                                     <Copy className="size-4" />
                                     Copiar
                                 </Button>
