@@ -1,40 +1,84 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookingDayGroup } from "@/components/bookings/booking-day-group";
 import { BookingRow } from "@/components/bookings/booking-row";
+import { apiFetch } from "@/lib/api";
+import { dayKey, formatDayLabel, nowAsWallClockUtc } from "@/lib/dates";
 
-const MOCK_UPCOMING = [
-    {
-        title: "Hoje",
-        subtitle: "sexta, 16 de outubro",
-        bookings: [
-            { id: "1", clientName: "Marina Costa", clientEmail: "marina.costa@email.com", clientPhone: "(65) 99812-3344", scheduledAt: "2026-10-16T09:00:00.000Z", status: "CONFIRMED" as const },
-            { id: "2", clientName: "Rafael Lima", clientEmail: "rafael.lima@email.com", clientPhone: "(65) 98254-3321", scheduledAt: "2026-10-16T10:00:00.000Z", status: "CONFIRMED" as const },
-            { id: "3", clientName: "Juliana Alves", clientEmail: "juliana.alves@email.com", clientPhone: "(65) 99654-1209", scheduledAt: "2026-10-16T14:00:00.000Z", status: "CONFIRMED" as const },
-        ],
-    },
-    {
-        title: "Amanhã",
-        subtitle: "sábado, 17 de outubro",
-        bookings: [
-            { id: "4", clientName: "Carla Mendes", clientEmail: "carla.mendes@email.com", clientPhone: "(65) 99231-7788", scheduledAt: "2026-10-17T09:00:00.000Z", status: "CONFIRMED" as const },
-            { id: "5", clientName: "Pedro Santos", clientEmail: "pedro.santos@email.com", clientPhone: "(65) 99237-2827", scheduledAt: "2026-10-17T11:00:00.000Z", status: "CONFIRMED" as const },
-        ],
-    },
-    {
-        title: "Segunda",
-        subtitle: "19 de outubro",
-        bookings: [
-            { id: "6", clientName: "Ana Souza", clientEmail: "ana.souza@email.com", clientPhone: "(65) 99812-3344", scheduledAt: "2026-10-19T15:00:00.000Z", status: "CONFIRMED" as const },
-            { id: "7", clientName: "Bruno Ferreira", clientEmail: "bruno.ferreira@email.com", clientPhone: null, scheduledAt: "2026-10-19T16:00:00.000Z", status: "CONFIRMED" as const },
-        ],
-    },
-];
+type Booking = {
+    id: string;
+    clientName: string;
+    clientEmail: string;
+    clientPhone: string | null;
+    scheduledAt: string;
+    status: "CONFIRMED" | "CANCELLED";
+};
+
+function groupByDay(items: Booking[]) {
+    const groups = new Map<string, Booking[]>();
+    for (const item of items) {
+        const key = dayKey(item.scheduledAt);
+        const existing = groups.get(key) ?? [];
+        existing.push(item);
+        groups.set(key, existing);
+    }
+    return Array.from(groups.entries()).map(([key, items]) => ({ key, items }));
+}
 
 export default function AgendamentosPage() {
+    const [bookings, setBookings] = useState<Booking[]>([]);
+
+    useEffect(() => {
+        async function fetchBookings() {
+            const response = await apiFetch("/bookings");
+            const data: Booking[] = await response.json();
+            setBookings(data);
+        }
+        fetchBookings();
+    }, []);
+
+    const now = nowAsWallClockUtc();
+    const todayKey = dayKey(now.toISOString());
+
+    const upcoming = bookings
+        .filter((b) => b.status === "CONFIRMED" && new Date(b.scheduledAt) >= now)
+        .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+
+    const past = bookings
+        .filter((b) => b.status === "CONFIRMED" && new Date(b.scheduledAt) < now)
+        .sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+
+    const cancelled = bookings
+        .filter((b) => b.status === "CANCELLED")
+        .sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+
+    function renderGroups(items: Booking[], canCancel: boolean) {
+        return groupByDay(items).map((group) => {
+            const { title, subtitle } = formatDayLabel(group.key, todayKey);
+            return (
+                <BookingDayGroup key={group.key} title={title} subtitle={subtitle} count={group.items.length}>
+                    {group.items.map((booking) => (
+                        <BookingRow
+                            key={booking.id}
+                            id={booking.id}
+                            clientName={booking.clientName}
+                            clientEmail={booking.clientEmail}
+                            clientPhone={booking.clientPhone}
+                            scheduledAt={booking.scheduledAt}
+                            status={booking.status}
+                            canCancel={canCancel}
+                            onCancel={() => {}}
+                        />
+                    ))}
+                </BookingDayGroup>
+            );
+        });
+    }
+
     return (
         <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8 md:px-8 md:py-10">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -52,56 +96,32 @@ export default function AgendamentosPage() {
 
             <Tabs defaultValue="proximos">
                 <TabsList className="grid w-full grid-cols-3 rounded-lg bg-muted p-1 sm:inline-flex sm:w-fit">
-                <TabsTrigger value="proximos" className="group h-8 gap-1.5 rounded-md px-2 text-sm font-medium sm:gap-2 sm:px-3">
+                    <TabsTrigger value="proximos" className="group h-8 gap-1.5 rounded-md px-2 text-sm font-medium sm:gap-2 sm:px-3">
                         Próximos
-                        <span className="rounded-full bg-background px-1.5 text-xs font-semibold group-data-active:bg-primary/10 group-data-active:text-primary">7</span>
+                        <span className="rounded-full bg-background px-1.5 text-xs font-semibold group-data-active:bg-primary/10 group-data-active:text-primary">{upcoming.length}</span>
                     </TabsTrigger>
                     <TabsTrigger value="anteriores" className="group h-8 gap-1.5 rounded-md px-2 text-sm font-medium sm:gap-2 sm:px-3">
                         Anteriores
-                        <span className="rounded-full bg-background px-1.5 text-xs font-semibold group-data-active:bg-primary/10 group-data-active:text-primary">12</span>
+                        <span className="rounded-full bg-background px-1.5 text-xs font-semibold group-data-active:bg-primary/10 group-data-active:text-primary">{past.length}</span>
                     </TabsTrigger>
                     <TabsTrigger value="cancelados" className="group h-8 gap-1.5 rounded-md px-2 text-sm font-medium sm:gap-2 sm:px-3">
                         Cancelados
-                        <span className="rounded-full bg-background px-1.5 text-xs font-semibold group-data-active:bg-primary/10 group-data-active:text-primary">2</span>
+                        <span className="rounded-full bg-background px-1.5 text-xs font-semibold group-data-active:bg-primary/10 group-data-active:text-primary">{cancelled.length}</span>
                     </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="proximos" className="flex flex-col gap-8 pt-6">
-                    {MOCK_UPCOMING.map((group) => (
-                        <BookingDayGroup
-                            key={group.title}
-                            title={group.title}
-                            subtitle={group.subtitle}
-                            count={group.bookings.length}
-                        >
-                            {group.bookings.map((booking) => (
-                                <BookingRow 
-                                key={booking.id}
-                                id={booking.id}
-                                clientName={booking.clientName}
-                                clientEmail={booking.clientEmail}
-                                clientPhone={booking.clientPhone}
-                                scheduledAt={booking.scheduledAt}
-                                status={booking.status}
-                                canCancel
-                                onCancel={() => {}}
-                                />
-                            ))}
-                        </BookingDayGroup>
-                    ))}
+                    {renderGroups(upcoming, true)}
                 </TabsContent>
 
-                <TabsContent value="anteriores" className="pt-6">
-                    <p className="text-sm text-muted-foreground">(mock — ainda sem dados nessa aba)</p>
+                <TabsContent value="anteriores" className="flex flex-col gap-8 pt-6">
+                    {renderGroups(past, false)}
                 </TabsContent>
 
-                <TabsContent value="cancelados" className="pt-6">
-                    <p className="text-sm text-muted-foreground">(mock — ainda sem dados nessa aba)</p>
+                <TabsContent value="cancelados" className="flex flex-col gap-8 pt-6">
+                    {renderGroups(cancelled, false)}
                 </TabsContent>
-
             </Tabs>
-
-
         </main>
     );
 }
