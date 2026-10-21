@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy } from "lucide-react";
+import { Copy, Link2, CalendarPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookingDayGroup } from "@/components/bookings/booking-day-group";
 import { BookingRow } from "@/components/bookings/booking-row";
 import { apiFetch } from "@/lib/api";
 import { dayKey, formatDayLabel, nowAsWallClockUtc } from "@/lib/dates";
-
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
+import { getOrganization } from "@/lib/session";
+import { Empty, EmptyContent, EmptyDescription, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 
 
 
@@ -39,6 +41,10 @@ export default function AgendamentosPage() {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
     const [retryKey, setRetryKey] = useState(0);
+
+    const organization = getOrganization();
+    const organizationSlug = organization?.slug ?? "";
+    const host = typeof window !== "undefined" ? window.location.host : "";
 
     useEffect(() => {
         let cancelled = false;
@@ -120,10 +126,12 @@ export default function AgendamentosPage() {
                         Os horários que seus clientes marcaram pelo seu link.
                     </p>
                 </div>
-                <Button variant="outline" className="h-9 w-fit gap-2 rounded-lg bg-card shadow-xs">
+                { !(status === "ready" && bookings.length === 0) && (
+                    <Button variant="outline" className="h-9 w-fit gap-2 rounded-lg bg-card shadow-xs">
                     <Copy />
                     Copiar link da agenda
                 </Button>
+                )}
             </div>
 
             
@@ -155,7 +163,35 @@ export default function AgendamentosPage() {
                     </div>
                 )}
 
-                {status === "ready" && (
+                {status === "ready" && bookings.length === 0 && (
+                    <Empty className="rounded-2xl border border-dashed border-border bg-card px-6 py-14">
+                        <EmptyMedia variant="icon">
+                            <CalendarPlus />
+                        </EmptyMedia>
+                        <EmptyTitle className="font-serif text-xl font-semibold tracking-tight">Nenhum agendamento ainda</EmptyTitle>
+                        <EmptyDescription>
+                            Compartilhe seu link para os clientes escolherem um horário. Os agendamentos aparecem aqui assim que forem feitos.
+                        </EmptyDescription>
+                        <EmptyContent>
+                            <div className="flex w-full max-w-md items-center gap-2 rounded-lg border border-border bg-background p-1.5 pl-3">
+                                <Link2 className="size-4 text-muted-foreground" />
+                                <span className="min-w-0 flex-1 truncate text-left text-sm">
+                                    {host}/agendar/<span className="font-medium">{organizationSlug}</span>
+                                </span>
+                                <Button size="sm" type="button" onClick={() => {}} className="h-8 gap-1.5">
+                                    <Copy className="size-4" />
+                                    Copiar
+                                </Button>
+                            </div>
+                            <Link href="/painel/disponibilidade" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+                                Ainda não definiu seus horários? Configure a disponibilidade
+                            </Link>
+                        </EmptyContent>
+                    </Empty>
+                )}
+
+
+                {status === "ready" && bookings.length > 0 && (
                     <Tabs defaultValue="proximos">
                         <TabsList className="grid w-full grid-cols-3 rounded-lg bg-muted p-1 sm:inline-flex sm:w-fit">
                         <TabsTrigger value="proximos" className="group h-8 gap-1.5 rounded-md px-2 text-sm font-medium sm:gap-2 sm:px-3">
