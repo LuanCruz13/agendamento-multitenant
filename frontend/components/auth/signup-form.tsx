@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
+import { setSession, setOrganization } from "@/lib/session";
 
 const API_URL= process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"
 
@@ -118,8 +119,8 @@ export function SignupForm(){
             }
 
             const data = await loginResponse.json();
-            localStorage.setItem("accessToken", data.accessToken);
-            localStorage.setItem("refreshToken", data.refreshToken);
+            setSession({ accessToken: data.accessToken, refreshToken: data.refreshToken});
+            setOrganization(data.organization);
 
             router.push("/painel/disponibilidade");
         } catch {
