@@ -88,3 +88,12 @@ export function formatDayLabel(key: string, todayKey: string): { title: string; 
 
     return { title, subtitle };
 }
+
+export function formatWeekdayDate(iso: string): string {
+    const date = new Date(iso);
+    const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "long", timeZone: "UTC" })
+        .format(date)
+        .replace("-feira", "");
+    const dayMonth = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", timeZone: "UTC" }).format(date);
+    return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)}, ${dayMonth}`;
+}

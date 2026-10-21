@@ -15,7 +15,7 @@ import Link from "next/link";
 import { getOrganization } from "@/lib/session";
 import { toast } from "sonner";
 import { Empty, EmptyContent, EmptyDescription, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
-
+import { CancelBookingDialog } from "@/components/bookings/cancel-booking-dialog";
 
 
 type Booking = {
@@ -42,6 +42,7 @@ export default function AgendamentosPage() {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
     const [retryKey, setRetryKey] = useState(0);
+    const [toCancel, setToCancel] = useState<Booking | null>(null);
 
     const organization = getOrganization();
     const organizationSlug = organization?.slug ?? "";
@@ -106,7 +107,7 @@ export default function AgendamentosPage() {
                             scheduledAt={booking.scheduledAt}
                             status={booking.status}
                             canCancel={canCancel}
-                            onCancel={() => {}}
+                            onCancel={() => setToCancel(booking)}
                         />
                     ))}
                 </BookingDayGroup>
@@ -144,6 +145,14 @@ export default function AgendamentosPage() {
                 </Button>
                 )}
             </div>
+
+            <CancelBookingDialog 
+                open={toCancel !== null}
+                clientName={toCancel?.clientName ?? ""}
+                scheduledAt={toCancel?.scheduledAt ?? ""}
+                onOpenChange={(open) => !open && setToCancel(null)}
+                onConfirm={() => setToCancel(null)}
+            />
 
             
 
