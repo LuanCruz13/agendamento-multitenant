@@ -11,7 +11,7 @@ type BookingRowProps = {
     scheduledAt: string;
     status: "CONFIRMED" | "CANCELLED";
     canCancel: boolean;
-    onCancel: (id: string) => void;
+    onCancel: () => void;
 };
 
 export function BookingRow({ id, clientName, clientEmail, clientPhone, scheduledAt, status, canCancel, onCancel }: BookingRowProps) {
@@ -57,7 +57,7 @@ export function BookingRow({ id, clientName, clientEmail, clientPhone, scheduled
                         variant="ghost"
                         size="sm"
                         type="button"
-                        onClick={() => onCancel(id)}
+                        onClick={onCancel}
                         className="h-8 gap-1.5 px-2.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
                         aria-label={`Cancelar agendamento de ${clientName} às ${formatSlotTime(scheduledAt)}`}
                     >
