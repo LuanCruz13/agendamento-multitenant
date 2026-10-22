@@ -97,3 +97,12 @@ export function formatWeekdayDate(iso: string): string {
     const dayMonth = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", timeZone: "UTC" }).format(date);
     return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)}, ${dayMonth}`;
 }
+
+export function formatFullDate(iso: string): string {
+    const date = new Date(iso);
+    const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "long", timeZone: "UTC" })
+        .format(date)
+        .replace("-feira", "");
+    const dayMonthYear = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(date);
+    return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)}, ${dayMonthYear}`;
+}
