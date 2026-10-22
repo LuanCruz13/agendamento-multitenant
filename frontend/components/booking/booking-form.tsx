@@ -88,7 +88,7 @@ export function BookingForm({ slug, selectedDate, selectedSlot, organizationName
                 }
                 return;
             }
-            router.push(`/agendar/${slug}/confirmado?horario=${encodeURIComponent(selectedSlot)}`);
+            router.push(`/agendar/${slug}/confirmado?horario=${encodeURIComponent(selectedSlot)}&nome=${encodeURIComponent(values.name)}&email=${encodeURIComponent(values.email)}`);
         } catch {
             setFormError("Não foi possível conectar ao servidor. Verifique sua conexão e tente de novo.");
         } finally {
