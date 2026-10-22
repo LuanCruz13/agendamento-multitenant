@@ -6,6 +6,9 @@ import { SlotPicker } from "./slot-picker";
 import { BookingNotFound } from "./booking-not-found";
 import { addDays, startOfToday, toDateParam } from "@/lib/dates";
 import { BookingForm } from "./booking-form";
+import { getInitials } from "@/lib/initials";
+import { slugToName } from "@/lib/slug";
+
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -17,12 +20,16 @@ type BookingFlowProps = {
 
 export function BookingFlow({ slug }: BookingFlowProps){
 
+        const orgName = slugToName(slug);
+
         const [weekStart, setWeekStart] = useState(() => startOfToday());
         const [selectedDate, setSelectedDate] = useState(() => startOfToday());
         const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
         const [status, setStatus] = useState<"loading" | "ready" | "error" | "not-found">("loading")
         const [slots, setSlots] = useState<string[]>([]);
         const [retryKey, setRetryKey] = useState(0);
+
+        
 
         useEffect(() => {
             let cancelled = false;
@@ -100,10 +107,10 @@ export function BookingFlow({ slug }: BookingFlowProps){
         <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-8 md:px-6 md:py-12">
             <div className="flex items-center gap-4">
                 <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-primary font-serif text-xl font-semibold text-primary-foreground">
-                    SB
+                    {getInitials(orgName)}
                 </span>
                 <div className="flex flex-col gap-1">
-                    <h1 className="font-serif text-3xl font-semibold tracking-tight text-balance md:text-4xl">Studio Bela</h1>
+                    <h1 className="font-serif text-3xl font-semibold tracking-tight text-balance md:text-4xl">{orgName}</h1>
                     <p className="text-pretty text-muted-foreground">
                         Escolha um dia e um horário livre. Cada atendimento dura 60 minutos.
                     </p>
@@ -137,7 +144,7 @@ export function BookingFlow({ slug }: BookingFlowProps){
                         slug={slug}
                         selectedDate={selectedDate}
                         selectedSlot={selectedSlot}
-                        organizationName="Studio Bela"
+                        organizationName={orgName}
                         onBookingConflict={handleBookingConflict}
                     />
                 </section>

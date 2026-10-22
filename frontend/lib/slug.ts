@@ -9,3 +9,10 @@ export function slugify(value: string) {
     .replace(/^-+|-+$/g, "")
     .slice(0, 40);
 }
+
+export function slugToName(slug: string){
+  return slug 
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+}
