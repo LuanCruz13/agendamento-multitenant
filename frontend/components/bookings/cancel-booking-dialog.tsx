@@ -10,11 +10,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatSlotRange, formatWeekdayDate } from "@/lib/dates";
+import { Spinner } from "../ui/spinner";
 
 type CancelBookingDialogProps = {
   open: boolean;
   clientName: string;
   scheduledAt: string;
+  pending: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 };
@@ -23,6 +25,7 @@ export function CancelBookingDialog({
   open,
   clientName,
   scheduledAt,
+  pending,
   onOpenChange,
   onConfirm,
 }: CancelBookingDialogProps) {
@@ -59,8 +62,16 @@ export function CancelBookingDialog({
           <AlertDialogAction
             className="bg-destructive text-white hover:bg-destructive/90"
             onClick={onConfirm}
+            disabled={pending}
           >
-            Cancelar agendamento
+            {pending ? (
+                <>
+                    <Spinner />
+                    Cancelando...
+                </>
+            ) : (
+                "Cancelar Agendamento"
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

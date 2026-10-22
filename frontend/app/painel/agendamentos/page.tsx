@@ -38,11 +38,16 @@ function groupByDay(items: Booking[]) {
     return Array.from(groups.entries()).map(([key, items]) => ({ key, items }));
 }
 
+function wait(ms: number){
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export default function AgendamentosPage() {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
     const [retryKey, setRetryKey] = useState(0);
     const [toCancel, setToCancel] = useState<Booking | null>(null);
+    const [cancelPending, setCancelPending] = useState(false);
 
     const organization = getOrganization();
     const organizationSlug = organization?.slug ?? "";
@@ -119,6 +124,45 @@ export default function AgendamentosPage() {
         setRetryKey((key) => key + 1);
     }
 
+    async function handleConfirmCancel(){
+        if (!toCancel) return
+        setCancelPending(true);
+
+        try{
+            const [response] = await Promise.all([
+                apiFetch(`/bookings/${toCancel.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status: "CANCELLED" }),
+                }),
+                wait(2000),
+            ]);
+
+            if (response.ok) {
+                setBookings((prev) =>
+                    prev.map((b) => (b.id === toCancel.id ? { ...b, status: "CANCELLED" } : b))
+                );
+                setToCancel(null);
+                toast.success("Agendamento cancelado. O horário já está livre na sua página.");
+                return;
+            }
+
+            if (response.status === 404) {
+                setToCancel(null);
+                toast.error("Esse agendamento não foi encontrado.");
+                handleRetry();
+                return;
+            }
+
+            toast.error("Não foi possível cancelar. Tente novamente.");
+        } catch {
+            toast.error("Não foi possível cancelar. Tente novamente.");
+        } finally {
+            setCancelPending(false);
+        }
+
+    }
+
     async function handleCopyLink() {
         const url = `${window.location.origin}/agendar/${organizationSlug}`;
         try {
@@ -150,8 +194,9 @@ export default function AgendamentosPage() {
                 open={toCancel !== null}
                 clientName={toCancel?.clientName ?? ""}
                 scheduledAt={toCancel?.scheduledAt ?? ""}
-                onOpenChange={(open) => !open && setToCancel(null)}
-                onConfirm={() => setToCancel(null)}
+                pending={cancelPending}
+                onOpenChange={(open) => !open && !cancelPending && setToCancel(null)}
+                onConfirm={handleConfirmCancel}
             />
 
             
