@@ -24,7 +24,7 @@ type BookingConfirmationProps = {
 
 
     return (
-        <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center gap-8 px-4 py-12 text-center md:py-16">
+        <main className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center gap-8 px-4 py-12 text-center md:py-16">
             <div className="relative flex items-center justify-center">
                 <div className="absolute size-36 rounded-full bg-amber-200/40 blur-2xl" aria-hidden />
                 <div className="relative flex size-20 items-center justify-center rounded-full bg-primary text-primary-foreground">
