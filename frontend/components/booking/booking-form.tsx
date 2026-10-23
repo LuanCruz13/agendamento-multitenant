@@ -136,7 +136,7 @@ export function BookingForm({ slug, selectedDate, selectedSlot, organizationName
                         render={({ field, fieldState}) => (
                             <Field data-invalid={!!fieldState.error}>
                                 <FieldLabel htmlFor="name" className="text-foreground">
-                                    Seu Nome
+                                    Seu nome
                                 </FieldLabel>
                                 <Input 
                                     {...field}
@@ -180,7 +180,7 @@ export function BookingForm({ slug, selectedDate, selectedSlot, organizationName
                         render={({ field, fieldState}) => (
                             <Field data-invalid={!!fieldState.error}>
                                 <FieldLabel htmlFor="phone" className="text-foreground">
-                                    Telefone <span>(opcional)</span>
+                                    Telefone<span className="font-normal text-muted-foreground">(opcional)</span>
                                 </FieldLabel>
                                 <Input
                                     {...field}
