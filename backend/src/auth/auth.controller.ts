@@ -6,6 +6,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 
 interface RequestWithUser extends Request{
@@ -40,6 +41,12 @@ export class AuthController {
     @HttpCode(200)
     forgotPassword(@Body() dto: ForgotPasswordDto) {
         return this.authService.forgotPassword(dto);
+    }
+
+    @Post('reset-password')
+    @HttpCode(200)
+    resetPassword(@Body() dto: ResetPasswordDto){
+        return this.authService.resetPassword(dto);
     }
 
 

@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -8,6 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { EmailService } from 'src/email/email.service';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -135,7 +136,31 @@ export class AuthService {
         return { message: 'Se esse e-mail existir, enviamos um link de redefinição.' };
     }
     
+    async resetPassword(dto: ResetPasswordDto){
+        const tokenHash = this.hashToken(dto.token);
 
+        const user = await this.prisma.user.findFirst({
+            where: { resetPasswordTokenHash: tokenHash },
+        });
+
+        if (!user || !user.resetPasswordExpiresAt || user.resetPasswordExpiresAt < new Date()){
+            throw new BadRequestException('token inválido ou expirado');
+        }
+
+        const passwordHash = await bcrypt.hash(dto.newPassword, 10);
+
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                passwordHash,
+                resetPasswordTokenHash: null,
+                resetPasswordExpiresAt: null,
+                refreshTokenHash: null,
+            },
+        });
+
+        return { message: 'Senha redefinida com sucesso. '};
+    }
 
 
 }
