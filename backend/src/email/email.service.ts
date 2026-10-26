@@ -19,4 +19,14 @@ export class EmailService {
             html: `<p>Olá ${clientName}, seu agendamento foi confirmado para ${scheduledAt.toISOString()}.</p>`,
         });
     }
+
+    async sendPasswordReset(to: string, resetLink: string){
+        await this.resend.emails.send({
+            from: 'onboarding@resend.dev',
+            to,
+            subject: 'Redefinição de senha',
+            html: `<p>Recebemos um pedido para redefinir sua senha. Clique no link abaixo para continuar:</p><p><a href="${resetLink}">${resetLink}</a></p><p>Se você não pediu isso, pode ignorar este e-mail.</p>`
+        });
+    }
+
 }

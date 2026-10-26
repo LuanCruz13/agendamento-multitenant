@@ -6,6 +6,8 @@ import * as crypto from 'crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +20,9 @@ export class AuthService {
 
         // ler JWT_REFRESH_SECRET do .env
         private readonly configService: ConfigService,
+
+        //mandar o e-mail de redefinição de senh
+        private readonly emailService: EmailService,
     ){}
 
     private hashToken(token: string): string{
@@ -100,6 +105,36 @@ export class AuthService {
             data: { refreshTokenHash: null},
         })
     }
+
+    async forgotPassword(dto: ForgotPasswordDto) {
+        const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    
+        if (user) {
+            const resetToken = crypto.randomBytes(32).toString('hex');
+            const resetTokenHash = this.hashToken(resetToken);
+            const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    resetPasswordTokenHash: resetTokenHash,
+                    resetPasswordExpiresAt: expiresAt,
+                },
+            });
+    
+            const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3001';
+            const resetLink = `${frontendUrl}/redefinir-senha?token=${resetToken}`;
+    
+            try {
+                await this.emailService.sendPasswordReset(user.email, resetLink);
+            } catch (error) {
+                console.error('Falha ao enviar e-mail de redefinição de senha:', error);
+            }
+        }
+    
+        return { message: 'Se esse e-mail existir, enviamos um link de redefinição.' };
+    }
+    
 
 
 

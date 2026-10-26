@@ -5,6 +5,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 
 
 interface RequestWithUser extends Request{
@@ -33,5 +34,13 @@ export class AuthController {
     logout(@Req() req: RequestWithUser){
         return this.authService.logout(req.user.sub);
     }
+
+    @Post('forgot-password')
+    @Throttle({ default: { limit: 3, ttl: 60000 } })
+    @HttpCode(200)
+    forgotPassword(@Body() dto: ForgotPasswordDto) {
+        return this.authService.forgotPassword(dto);
+    }
+
 
 }
