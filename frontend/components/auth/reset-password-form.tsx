@@ -1,10 +1,10 @@
-
+// frontend/components/auth/reset-password-form.tsx (substitui o arquivo inteiro)
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { AlertCircle, Eye, EyeOff, Link2Off, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -25,6 +25,7 @@ import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 const controlClass = "h-11 bg-card text-base shadow-xs md:text-sm";
 
 const resetPasswordSchema = z
@@ -40,6 +41,7 @@ const resetPasswordSchema = z
 type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
 export function ResetPasswordForm() {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const token = searchParams.get("token");
 
@@ -47,6 +49,13 @@ export function ResetPasswordForm() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
     const [pending, setPending] = useState(false);
+    const [invalidLink, setInvalidLink] = useState(false);
+
+    useEffect(() => {
+        if (!token) {
+            setInvalidLink(true);
+        }
+    }, [token]);
 
     const { control, handleSubmit } = useForm<ResetPasswordValues>({
         resolver: zodResolver(resetPasswordSchema),
@@ -54,14 +63,61 @@ export function ResetPasswordForm() {
     });
 
     async function onSubmit(values: ResetPasswordValues) {
+        if (!token) return;
+
         setFormError(null);
         setPending(true);
 
         try {
-            console.log({ token, ...values });
+            const response = await fetch(`${API_URL}/auth/reset-password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token, newPassword: values.password }),
+            });
+
+            if (!response.ok) {
+                if (response.status === 400) {
+                    setInvalidLink(true);
+                } else {
+                    setFormError("Algo deu errado. Tente novamente.");
+                }
+                return;
+            }
+
+            router.push("/login?resetSenha=sucesso");
+        } catch {
+            setFormError("Não foi possível conectar ao servidor. Verifique se a API está rodando.");
         } finally {
             setPending(false);
         }
+    }
+
+    if (invalidLink) {
+        return (
+            <div className="flex flex-col gap-8">
+                <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10">
+                    <Link2Off className="size-5 text-destructive" />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <h1 className="font-serif text-3xl font-semibold tracking-tight text-balance md:text-4xl">
+                        Este link não vale mais
+                    </h1>
+                    <p className="text-pretty text-muted-foreground">
+                        Links para redefinir a senha valem por 1 hora e só podem ser usados uma vez. Peça um novo link para continuar.
+                    </p>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                    <Button render={<Link href="/esqueci-senha" />} size="lg" nativeButton={false} className="h-11 text-base">
+                        Pedir um novo link
+                    </Button>
+                    <Button render={<Link href="/login" />} variant="outline" size="lg" nativeButton={false} className="h-11 gap-2 text-base">
+                        Voltar para o login
+                    </Button>
+                </div>
+            </div>
+        );
     }
 
     return (
