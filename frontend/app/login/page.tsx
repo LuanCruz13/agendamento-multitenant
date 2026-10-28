@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Suspense } from "react";
 import Link from "next/link"
 import { Logo } from "@/components/landing/logo";
 import { AuthAside } from "@/components/auth/auth-aside";
@@ -27,7 +28,9 @@ export default function LoginPage(){
                             <p className="text-pretty text-muted-foreground">Entre para ver a agenda e os agendamentos da sua organização.</p>
                         </div>
 
-                        <LoginForm/>
+                        <Suspense fallback={null}>
+                            <LoginForm/>
+                        </Suspense>
 
                         <p className="text-sm text-muted-foreground">
                             Ainda não tem conta?{" "}

@@ -1,11 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState} from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { setOrganization, setSession } from "@/lib/session";
 
@@ -27,6 +28,9 @@ type LoginFormValues = z.infer<typeof loginSchema>
 export function LoginForm(){
 
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const resetSuccess = searchParams.get("resetSenha") === "sucesso";
+
     const [showPassword, setShowPassword] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
     const [pending, setPending] = useState(false);
@@ -76,6 +80,13 @@ export function LoginForm(){
 
   return (
     <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+        {resetSuccess && !formError && (
+            <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm">
+                <CheckCircle2 className="size-4 shrink-0 text-primary" />
+                <p>Senha alterada. Entre com a nova senha.</p>
+            </div>
+        )}
+
         {formError && (
             <div
                 role="alert"
@@ -112,12 +123,12 @@ export function LoginForm(){
                     Senha
                 </label>
 
-                <a 
-                    href="#"
+                <Link 
+                    href="/esqueci-senha"
                     className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                 >
                     Esqueceu a senha?
-                </a>
+                </Link>
             </div>
 
             <div className="relative">
