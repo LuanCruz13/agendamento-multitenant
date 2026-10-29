@@ -10,7 +10,7 @@ export const toMinutes = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Numbe
 
 export const slotsIn = (start: string, end: string) => Math.floor((toMinutes(end) - toMinutes(start)) / 60)
 
-export type Range = { start: string; end: string }
+export type Range = { id: string, weekday: number; start: string; end: string }
 
 export const overlaps = (a: Range, b: Range) => (
     toMinutes(a.start) < toMinutes(b.end) && toMinutes(b.start) < toMinutes(a.end)
