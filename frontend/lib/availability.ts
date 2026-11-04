@@ -15,3 +15,11 @@ export type Range = { id: string, weekday: number; start: string; end: string }
 export const overlaps = (a: Range, b: Range) => (
     toMinutes(a.start) < toMinutes(b.end) && toMinutes(b.start) < toMinutes(a.end)
 )
+
+export const slotLabels = (start: string, end: string) => {
+    const total = slotsIn(start, end);
+    const startHour = Number(start.slice(0, 2));
+    return Array.from({ length: total}, (_, i) => `${String(startHour + i).padStart(2, "0")}:00`);
+
+
+}

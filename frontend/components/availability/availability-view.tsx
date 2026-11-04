@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { WEEK_ORDER, WEEKDAY_LABEL, slotsIn, toHHMM, type Range } from "@/lib/availability";
 import { AvailabilityDayRow } from "./availability-day-row";
+import { AvailabilityDialog } from "./availability-dialog";
 
 
 type ApiAvailability = {
@@ -22,6 +23,7 @@ export function AvailabilityView() {
     const [ ranges, setRanges] = useState<Range[]>([]);
     const [ status, setStatus] = useState<"loading" | "ready" | "error">("loading");
     const [retryKey, setRetryKey] = useState(0);
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
@@ -75,7 +77,7 @@ export function AvailabilityView() {
                     <h1 className="font-serif text-2xl font-semibold tracking-tight md:text-3xl">Disponibilidade</h1>
                     <p className="text-pretty text-muted-foreground">Os dias e horários em que você atende. Vale para todas as semanas.</p>
                 </div>
-                <Button className="h-9 w-fit gap-2">
+                <Button className="h-9 w-fit gap-2" onClick={() => setDialogOpen(true)}>
                     <Plus />
                     Adicionar horário
                 </Button>
@@ -164,10 +166,12 @@ export function AvailabilityView() {
                 </>
             )}
 
-               
-
-
-
+            <AvailabilityDialog
+                open={dialogOpen}
+                onOpenChange={setDialogOpen}
+                existing={ranges}
+                onSaved={() => setDialogOpen(false)}
+            />
         </main>
     )
 }
