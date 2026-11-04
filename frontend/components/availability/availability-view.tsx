@@ -70,6 +70,10 @@ export function AvailabilityView() {
         setRetryKey((key) => key + 1);
     }
 
+    function handleSaved(newRange: Range) {
+        setRanges((prev) => [...prev.filter((r) => r.id !== newRange.id), newRange]);
+    }
+
     return (
         <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8 md:px-8 md:py-10">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -154,7 +158,11 @@ export function AvailabilityView() {
                                     .sort((a, b) => a.start.localeCompare(b.start));
 
                                 return (
-                                    <AvailabilityDayRow key={weekday} label={WEEKDAY_LABEL[weekday]} ranges={DayRanges} />
+                                    <AvailabilityDayRow 
+                                        key={weekday} 
+                                        label={WEEKDAY_LABEL[weekday]} 
+                                        ranges={DayRanges} 
+                                    />
                                 );
                         })}
                     </ul>
@@ -170,8 +178,12 @@ export function AvailabilityView() {
                 open={dialogOpen}
                 onOpenChange={setDialogOpen}
                 existing={ranges}
-                onSaved={() => setDialogOpen(false)}
+                onSaved={(newRange) => {
+                    handleSaved(newRange);
+                    setDialogOpen(false);
+                }}
             />
+            
         </main>
     )
 }

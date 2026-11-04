@@ -20,6 +20,6 @@ export const slotLabels = (start: string, end: string) => {
     const total = slotsIn(start, end);
     const startHour = Number(start.slice(0, 2));
     return Array.from({ length: total}, (_, i) => `${String(startHour + i).padStart(2, "0")}:00`);
-
-
 }
+
+export const toISO = (hhmm: string) => `1970-01-01T${hhmm}:00.000Z`; //a data não vai importar
