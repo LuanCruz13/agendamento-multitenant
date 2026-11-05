@@ -24,6 +24,7 @@ export function AvailabilityView() {
     const [ status, setStatus] = useState<"loading" | "ready" | "error">("loading");
     const [retryKey, setRetryKey] = useState(0);
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [defaultWeekday, setDefaultWeekday] = useState<number | undefined>(undefined);
 
     useEffect(() => {
         let cancelled = false;
@@ -74,6 +75,11 @@ export function AvailabilityView() {
         setRanges((prev) => [...prev.filter((r) => r.id !== newRange.id), newRange]);
     }
 
+    function handleAddClick(weekday?: number){
+        setDefaultWeekday(weekday);
+        setDialogOpen(true);
+    }
+
     return (
         <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8 md:px-8 md:py-10">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -81,7 +87,7 @@ export function AvailabilityView() {
                     <h1 className="font-serif text-2xl font-semibold tracking-tight md:text-3xl">Disponibilidade</h1>
                     <p className="text-pretty text-muted-foreground">Os dias e horários em que você atende. Vale para todas as semanas.</p>
                 </div>
-                <Button className="h-9 w-fit gap-2" onClick={() => setDialogOpen(true)}>
+                <Button className="h-9 w-fit gap-2" onClick={() => handleAddClick()}>
                     <Plus />
                     Adicionar horário
                 </Button>
@@ -162,6 +168,8 @@ export function AvailabilityView() {
                                         key={weekday} 
                                         label={WEEKDAY_LABEL[weekday]} 
                                         ranges={DayRanges} 
+                                        weekday={weekday}
+                                        onAddClick={handleAddClick}
                                     />
                                 );
                         })}
@@ -178,10 +186,12 @@ export function AvailabilityView() {
                 open={dialogOpen}
                 onOpenChange={setDialogOpen}
                 existing={ranges}
+                defaultWeekday={defaultWeekday}
                 onSaved={(newRange) => {
                     handleSaved(newRange);
                     setDialogOpen(false);
                 }}
+                
             />
             
         </main>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Controller ,useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,6 +41,16 @@ export function AvailabilityDialog({ open, onOpenChange, existing, editing, defa
             end: editing?.end ?? "",
         },
     });
+
+    useEffect(() => {
+        if (open){
+            form.reset({
+                weekday: editing?.weekday ?? defaultWeekday ?? 1,
+                start: editing?.start ?? "",
+                end: editing?.end ?? "",
+            });
+        }
+    }, [open, editing, defaultWeekday]);
 
     const { errors } = form.formState;
     const [pending, setPending] = useState(false);

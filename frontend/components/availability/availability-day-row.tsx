@@ -6,9 +6,11 @@ import { slotsIn, type Range } from "@/lib/availability";
 type AvailabilityDayRowProps = {
     label: string;
     ranges: Range[];
+    weekday: number;
+    onAddClick: (weekday: number) => void;
 };
 
-export function AvailabilityDayRow({ label, ranges }: AvailabilityDayRowProps){
+export function AvailabilityDayRow({ label, ranges, weekday, onAddClick }: AvailabilityDayRowProps){
 
     const totalSlots = ranges.reduce((total, r) => total + slotsIn(r.start, r.end), 0);
     const meta = totalSlots === 0 ? "Sem atendimento" : totalSlots === 1 ? "1 horário" : `${totalSlots} horários`;
@@ -29,9 +31,10 @@ export function AvailabilityDayRow({ label, ranges }: AvailabilityDayRowProps){
                     variant="outline"
                     className="h-9 gap-1.5 border-dashed px-3 text-muted-foreground"
                     aria-label={`Adicionar horário na ${label.toLowerCase()}`}
+                    onClick={() => onAddClick(weekday)}
                 >
-                    <Plus />
-                    Adicionar
+                    <Plus/>
+                        Adicionar
                 </Button>
             </div>
         </li>
