@@ -67,6 +67,7 @@ export class AuthService {
             accessToken, 
             refreshToken, 
             organization: { name: user.organization.name, slug: user.organization.slug},
+            user: { email: user.email },
         };
     }
 
