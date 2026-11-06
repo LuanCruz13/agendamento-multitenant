@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Plus, Info, AlertCircle, CalendarX2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -9,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { WEEK_ORDER, WEEKDAY_LABEL, slotsIn, toHHMM, type Range } from "@/lib/availability";
 import { AvailabilityDayRow } from "./availability-day-row";
 import { AvailabilityDialog } from "./availability-dialog";
+import { AvailabilityRemoveDialog } from "./availability-remove-dialog";
+
 
 
 type ApiAvailability = {
@@ -26,6 +29,8 @@ export function AvailabilityView() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [defaultWeekday, setDefaultWeekday] = useState<number | undefined>(undefined);
     const [editingRange, setEditingRange] = useState<Range | undefined>(undefined);
+    const [toRemove, setToRemove] = useState<Range | null>(null);
+    const [removePending, setRemovePending] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
@@ -86,6 +91,45 @@ export function AvailabilityView() {
         setEditingRange(range);
         setDialogOpen(true);
     }
+
+    function handleRemoveClick(range: Range){
+        setToRemove(range);
+    }
+
+    async function handleConfirmRemove() {
+        if (!toRemove) return;
+        setRemovePending(true);
+    
+        try {
+            const response = await apiFetch(`/availability/${toRemove.id}`, {
+                method: "DELETE",
+            });
+    
+            if (response.ok) {
+                setRanges((prev) => prev.filter((r) => r.id !== toRemove.id));
+                setToRemove(null);
+                toast.success("Horário removido.");
+                return;
+            }
+    
+            if (response.status === 404) {
+                setToRemove(null);
+                toast.error("Esse horário não foi encontrado.");
+                handleRetry();
+                return;
+            }
+    
+            toast.error("Não foi possível remover. Tente novamente.");
+        } catch {
+            toast.error("Não foi possível remover. Tente novamente.");
+        } finally {
+            setRemovePending(false);
+        }
+    }
+    
+
+
+
 
     return (
         <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8 md:px-8 md:py-10">
@@ -178,6 +222,7 @@ export function AvailabilityView() {
                                         weekday={weekday}
                                         onAddClick={handleAddClick}
                                         onEditClick={handleEditClick}
+                                        onRemoveClick={handleRemoveClick}
                                     />
                                 );
                         })}
@@ -202,6 +247,15 @@ export function AvailabilityView() {
                 editing={editingRange}
                 
             />
+
+            <AvailabilityRemoveDialog
+                open={toRemove !== null}
+                range={toRemove}
+                pending={removePending}
+                onOpenChange={(open) => !open && !removePending && setToRemove(null)}
+                onConfirm={handleConfirmRemove}
+            />
+
             
         </main>
     )

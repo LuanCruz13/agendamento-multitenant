@@ -6,9 +6,10 @@ type AvailabilityChipProps = {
     range: Range;
     dayLabel: string;
     onEditClick: (range: Range) => void;
+    onRemoveClick: (range: Range) => void;
 };
 
-export function AvailabilityChip({ range, dayLabel, onEditClick }: AvailabilityChipProps){
+export function AvailabilityChip({ range, dayLabel, onEditClick, onRemoveClick }: AvailabilityChipProps){
     const dayLower = dayLabel.toLowerCase();
 
     return (
@@ -30,6 +31,7 @@ export function AvailabilityChip({ range, dayLabel, onEditClick }: AvailabilityC
                 size="icon"
                 className="size-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                 aria-label={`Remover ${dayLower}, ${range.start} às ${range.end}`}
+                onClick={() => onRemoveClick(range)}
             >
                 <Trash2 className="size-3.5" />
             </Button>
