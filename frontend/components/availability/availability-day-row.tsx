@@ -8,9 +8,10 @@ type AvailabilityDayRowProps = {
     ranges: Range[];
     weekday: number;
     onAddClick: (weekday: number) => void;
+    onEditClick: (range: Range) => void;
 };
 
-export function AvailabilityDayRow({ label, ranges, weekday, onAddClick }: AvailabilityDayRowProps){
+export function AvailabilityDayRow({ label, ranges, weekday, onAddClick, onEditClick  }: AvailabilityDayRowProps){
 
     const totalSlots = ranges.reduce((total, r) => total + slotsIn(r.start, r.end), 0);
     const meta = totalSlots === 0 ? "Sem atendimento" : totalSlots === 1 ? "1 horário" : `${totalSlots} horários`;
@@ -24,7 +25,7 @@ export function AvailabilityDayRow({ label, ranges, weekday, onAddClick }: Avail
 
             <div className="flex flex-wrap items-center gap-2">
                 {ranges.map((range) => (
-                    <AvailabilityChip key={range.id} range={range} dayLabel={label} />
+                    <AvailabilityChip key={range.id} range={range} dayLabel={label} onEditClick={onEditClick} />
                 ))}
 
                 <Button

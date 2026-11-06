@@ -5,9 +5,10 @@ import type { Range } from "@/lib/availability";
 type AvailabilityChipProps = {
     range: Range;
     dayLabel: string;
+    onEditClick: (range: Range) => void;
 };
 
-export function AvailabilityChip({ range, dayLabel }: AvailabilityChipProps){
+export function AvailabilityChip({ range, dayLabel, onEditClick }: AvailabilityChipProps){
     const dayLower = dayLabel.toLowerCase();
 
     return (
@@ -19,6 +20,7 @@ export function AvailabilityChip({ range, dayLabel }: AvailabilityChipProps){
                  size="icon"
                  className="ml-1.5 size-7 text-muted-foreground hover:text-foreground"
                  aria-label={`Editar ${dayLower}, ${range.start} às ${range.end}`}
+                 onClick={() => onEditClick(range)}
             >
                 <Pencil className="size-3.5" />
             </Button>

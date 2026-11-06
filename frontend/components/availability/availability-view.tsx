@@ -25,6 +25,7 @@ export function AvailabilityView() {
     const [retryKey, setRetryKey] = useState(0);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [defaultWeekday, setDefaultWeekday] = useState<number | undefined>(undefined);
+    const [editingRange, setEditingRange] = useState<Range | undefined>(undefined);
 
     useEffect(() => {
         let cancelled = false;
@@ -76,7 +77,13 @@ export function AvailabilityView() {
     }
 
     function handleAddClick(weekday?: number){
+        setEditingRange(undefined);
         setDefaultWeekday(weekday);
+        setDialogOpen(true);
+    }
+
+    function handleEditClick(range: Range){
+        setEditingRange(range);
         setDialogOpen(true);
     }
 
@@ -170,6 +177,7 @@ export function AvailabilityView() {
                                         ranges={DayRanges} 
                                         weekday={weekday}
                                         onAddClick={handleAddClick}
+                                        onEditClick={handleEditClick}
                                     />
                                 );
                         })}
@@ -191,6 +199,7 @@ export function AvailabilityView() {
                     handleSaved(newRange);
                     setDialogOpen(false);
                 }}
+                editing={editingRange}
                 
             />
             
