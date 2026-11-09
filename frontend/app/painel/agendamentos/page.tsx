@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Link2, CalendarPlus } from "lucide-react";
+import { PublicLinkField } from "@/components/painel/public-link-field";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookingDayGroup } from "@/components/bookings/booking-day-group";
 import { BookingRow } from "@/components/bookings/booking-row";
 import { apiFetch } from "@/lib/api";
 import { dayKey, formatDayLabel, nowAsWallClockUtc } from "@/lib/dates";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CalendarPlus, Copy } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -51,7 +51,6 @@ export default function AgendamentosPage() {
 
     const organization = getOrganization();
     const organizationSlug = organization?.slug ?? "";
-    const host = typeof window !== "undefined" ? window.location.host : "";
 
     useEffect(() => {
         let cancelled = false;
@@ -163,15 +162,6 @@ export default function AgendamentosPage() {
 
     }
 
-    async function handleCopyLink() {
-        const url = `${window.location.origin}/agendar/${organizationSlug}`;
-        try {
-            await navigator.clipboard.writeText(url);
-            toast.success("Link copiado.");
-        } catch {
-            toast.error("Não foi possível copiar. Selecione o link e copie manualmente.");
-        }
-    }
 
     return (
         <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8 md:px-8 md:py-10">
@@ -238,16 +228,7 @@ export default function AgendamentosPage() {
                             Compartilhe seu link para os clientes escolherem um horário. Os agendamentos aparecem aqui assim que forem feitos.
                         </EmptyDescription>
                         <EmptyContent>
-                            <div className="flex w-full max-w-md items-center gap-2 rounded-lg border border-border bg-background p-1.5 pl-3">
-                                <Link2 className="size-4 text-muted-foreground" />
-                                <span className="min-w-0 flex-1 truncate text-left text-sm">
-                                    {host}/agendar/<span className="font-medium">{organizationSlug}</span>
-                                </span>
-                                <Button size="sm" type="button" onClick={handleCopyLink} className="h-8 gap-1.5">
-                                    <Copy className="size-4" />
-                                    Copiar
-                                </Button>
-                            </div>
+                            <PublicLinkField slug={organizationSlug} className="w-full max-w-md" />
                             <Link href="/painel/disponibilidade" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
                                 Ainda não definiu seus horários? Configure a disponibilidade
                             </Link>

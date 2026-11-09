@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/input-group";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
-import { SLUG_REGEX, slugify } from "@/lib/slug";
+import { slugify } from "@/lib/slug";
+import { nameSchema, slugSchema } from "@/lib/validations/organization";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -35,20 +36,11 @@ const API_URL= process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"
 const controlClass = "h-11 bg-card text-base shadow-xs md:text-sm"
 
 const signupSchema = z.object({
-    name: z.string().trim().min(1, "Informe o nome do seu negócio."),
+    name: nameSchema,
     ownerName: z.string().trim().min(1, "Informe seu nome."),
-    slug: z
-        .string()
-        .trim()
-        .toLowerCase()
-        .pipe(
-            z.string().regex(
-                SLUG_REGEX,
-                "Use apenas letras minúsculas, números e hifens."
-            )
-        ),
-        email: z.string().trim().min(1, "Informe seu e-mail.").pipe(z.email("E-mail inválido.")),
-        password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres."),
+    slug: slugSchema,
+    email: z.string().trim().min(1, "Informe seu e-mail.").pipe(z.email("E-mail inválido.")),
+    password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres."),
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
