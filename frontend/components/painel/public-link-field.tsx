@@ -29,7 +29,7 @@ export function PublicLinkField({ slug, className}: PublicLinkFieldProps){
         <div className={cn("flex min-w-0 items-center gap-2 rounded-lg border border-border bg-background p-1.5 pl-3", className)}>
             <Link2 className="size-4 shrink-0 text-muted-foreground"/>
             <span className="min-w-0 flex-1 truncate text-left text-sm">
-                {host}/agendar<span className="font-medium">{slug}</span>
+                {host}/agendar/<span className="font-medium">{slug}</span>
             </span>
             <Button size="sm" type="button" onClick={handleCopy} className="h-8 shrink-0 gap-1.5">
                 <Copy className="size-4" />
