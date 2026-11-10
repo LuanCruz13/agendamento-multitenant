@@ -13,6 +13,7 @@ import { getOrganization } from "@/lib/session";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { TriangleAlert } from "lucide-react";
 
 const controlClass = "h-11 bg-card text-base shadow-xs md:text-sm";
 
@@ -113,6 +114,17 @@ export function OrganizationForm(){
                     </Field>
                 )}
             />
+
+            {form.watch("slug") !== organization?.slug && (
+                <div role="status" className="flex items-start gap-3 rounded-xl border border-accent/50 bg-accent/15 p-4">
+                    <TriangleAlert className="mt-0.5 size-5 shrink-0 text-accent-foreground"/>
+                    <span>
+                        O link antigo vai parar de funcionar assim que você salvar essa alteração.
+                    </span>
+                </div>
+            )}
+
+
             </SettingsCard>
         </form>
             
