@@ -23,6 +23,7 @@ export function OrganizationForm(){
 
     const form = useForm({
         resolver: zodResolver(organizationSchema),
+        mode: "onChange",
         defaultValues: {
             name: organization?.name ?? "",
             slug: organization?.slug ?? "",
