@@ -18,9 +18,13 @@ import { TriangleAlert } from "lucide-react";
 const controlClass = "h-11 bg-card text-base shadow-xs md:text-sm";
 
 
+
 export function OrganizationForm(){
 
     const organization = getOrganization()
+
+    const host = typeof window !== "undefined" ? window.location.host : "";
+
 
     const form = useForm({
         resolver: zodResolver(organizationSchema),
@@ -115,14 +119,17 @@ export function OrganizationForm(){
                 )}
             />
 
-            {form.watch("slug") !== organization?.slug && (
-                <div role="status" className="flex items-start gap-3 rounded-xl border border-accent/50 bg-accent/15 p-4">
-                    <TriangleAlert className="mt-0.5 size-5 shrink-0 text-accent-foreground"/>
-                    <span>
-                        O link antigo vai parar de funcionar assim que você salvar essa alteração.
-                    </span>
-                </div>
-            )}
+                {form.watch("slug") !== organization?.slug && (
+                    <div role="status" className="flex items-start gap-3 rounded-xl border border-accent/50 bg-accent/15 p-4">
+                        <TriangleAlert className="mt-0.5 size-5 shrink-0 text-accent-foreground" />
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-sm font-semibold">O link antigo vai parar de funcionar</span>
+                            <span className="text-sm text-pretty text-muted-foreground">
+                                Quem abrir <span className="font-medium text-foreground">{host}/agendar/{organization?.slug}</span> vai ver "Não encontramos essa agenda". Atualize o link onde você divulgou: Instagram, WhatsApp e materiais impressos.
+                            </span>
+                        </div>
+                    </div>
+                )}
 
 
             </SettingsCard>
