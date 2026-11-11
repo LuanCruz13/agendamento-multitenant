@@ -1,22 +1,37 @@
 "use client"
 
+import { useState } from "react";
 import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupText, InputGroupInput } from "@/components/ui/input-group";
 import { cn } from "@/lib/utils";
 import { SettingsCard } from "./settings-card";
-
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { organizationSchema } from "@/lib/validations/organization";
-import { getOrganization } from "@/lib/session";
-
+import { getOrganization, setOrganization } from "@/lib/session";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { TriangleAlert } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { TriangleAlert, AlertCircle } from "lucide-react";
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogCancel,
+    AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { apiFetch } from "@/lib/api";
+import { toast } from "sonner";
+
+
+
+
 
 const controlClass = "h-11 bg-card text-base shadow-xs md:text-sm";
-
 
 
 export function OrganizationForm(){
@@ -24,7 +39,9 @@ export function OrganizationForm(){
     const organization = getOrganization()
 
     const host = typeof window !== "undefined" ? window.location.host : "";
-
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [pending, setPending] = useState(false);
+    const [serverError, setServerError] = useState<string | null>(null);
 
     const form = useForm({
         resolver: zodResolver(organizationSchema),
@@ -35,8 +52,59 @@ export function OrganizationForm(){
         },
     });
 
+    async function submitChanges(payload: { name?: string; slug?: string }){
+        setPending(true);
+        setServerError(null);
+
+        try {
+            const response = await apiFetch("/organizations", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json"},
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setOrganization({ name: data.name, slug: data.slug});
+                form.reset({ name: data.name, slug: data.slug});
+                setConfirmOpen(false);
+                toast.success("Configurações salvas.");
+                return;
+            }
+
+            if (response.status === 409) {
+                setConfirmOpen(false);
+                form.setError("slug", { message: "Esse endereço já está em uso. Escolha outro." });
+                form.setFocus("slug");
+                return;
+            }
+
+            setServerError("Confira os dados e tente novamente.");
+        } catch {
+            setServerError("Não foi possível salvar. Tente novamente.")
+        } finally {
+            setPending(false);
+        }
+    }
+
+    //montando o payload p/ decidir o fluxo
+    function onSubmit(values: { name: string; slug: string }) {
+        const payload: { name?: string; slug?: string } = {};
+        if (form.formState.dirtyFields.name) payload.name = values.name;
+        if (form.formState.dirtyFields.slug) payload.slug = values.slug;
+    
+        if (form.formState.dirtyFields.slug) {
+            setConfirmOpen(true);
+            return;
+        }
+    
+        submitChanges(payload);
+    }
+
+
+
     return (
-        <form onSubmit={form.handleSubmit(() => {})}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
             <SettingsCard
             id="organization-heading"
             title="Dados do negócio"
@@ -76,7 +144,13 @@ export function OrganizationForm(){
                     </Button>
                 </>
             }
-        >
+            >
+                {serverError && (
+                    <Alert variant="destructive">
+                        <AlertCircle />
+                        <AlertDescription>{serverError}</AlertDescription>
+                    </Alert>
+                )}
             <Controller 
                 name="name"
                 control={form.control}
@@ -133,6 +207,60 @@ export function OrganizationForm(){
 
 
             </SettingsCard>
+
+            <AlertDialog 
+                open={confirmOpen} 
+                onOpenChange={(open) => !open && !pending && setConfirmOpen(false)}
+            >
+                <AlertDialogContent className="max-w-md gap-5 rounded-2xl p-6">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="font-serif text-xl font-semibold tracking-tight">
+                            Trocar o endereço do seu link?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            O endereço antigo para de funcionar assim que você salvar. Não dá para redirecionar quem usar o link antigo.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+
+                    <div className="flex flex-col gap-2 rounded-xl border border-border bg-background p-3 text-sm">
+                        <div className="flex items-center gap-2">
+                            <span className="w-12 shrink-0 text-xs text-muted-foreground">Antes</span>
+                            <span className="truncate text-muted-foreground line-through">
+                                {host}/agendar/{organization?.slug}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="w-12 shrink-0 text-xs text-muted-foreground">Depois</span>
+                            <span className="truncate font-medium">
+                                {host}/agendar/{form.watch("slug")}
+                            </span>
+                        </div>
+                    </div>
+
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Manter endereço atual</AlertDialogCancel>
+                        <AlertDialogAction 
+                            disabled={pending}
+                            onClick={() => {
+                                const values = form.getValues();
+                                const payload: { name?: string; slug?: string } = {};
+                                if (form.formState.dirtyFields.name) payload.name = values.name;
+                                payload.slug = values.slug;
+                                submitChanges(payload);
+                            }}
+                        >   
+                            { pending ? (
+                                <>
+                                    <Spinner />
+                                    Salvando...
+                                </>
+                            ) : (
+                                "Trocar endereço"
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </form>
             
     )
