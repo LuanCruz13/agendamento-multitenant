@@ -9,7 +9,7 @@ import { SettingsCard } from "./settings-card";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { organizationSchema } from "@/lib/validations/organization";
-import { getOrganization, setOrganization } from "@/lib/session";
+import { useOrganization } from "@/components/painel/organization-provider";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -36,7 +36,7 @@ const controlClass = "h-11 bg-card text-base shadow-xs md:text-sm";
 
 export function OrganizationForm(){
 
-    const organization = getOrganization()
+    const {organization, setOrganization } = useOrganization()
 
     const host = typeof window !== "undefined" ? window.location.host : "";
     const [confirmOpen, setConfirmOpen] = useState(false);
