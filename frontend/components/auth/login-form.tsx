@@ -8,7 +8,7 @@ import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { setOrganization, setSession } from "@/lib/session";
+import { setOrganization, setSession, setUser } from "@/lib/session";
 
 const inputClass = 
     "h-11 w-full rounded-lg border border-input bg-card px-3 text-base text-foreground shadow-xs outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20 aria-invalid:border-destructive aria-invalid:ring-destructive/15 md:text-sm"
@@ -68,6 +68,7 @@ export function LoginForm(){
             const data = await response.json();
             setSession({ accessToken: data.accessToken, refreshToken: data.refreshToken });
             setOrganization(data.organization);
+            setUser(data.user);
 
             router.push("/painel");
 

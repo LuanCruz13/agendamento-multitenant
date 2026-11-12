@@ -8,6 +8,10 @@ type Organization = {
     slug: string;
 };
 
+type User = { 
+    email: string;
+};
+
 
 export function getSession(): Session | null {
     try {
@@ -37,6 +41,7 @@ export function clearSession(){
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("organization");
+        localStorage.removeItem("user");
     } catch {
         return null;
     }
@@ -65,6 +70,24 @@ export function setSession(session: Session){
         localStorage.setItem("accessToken", session.accessToken);
         localStorage.setItem("refreshToken", session.refreshToken);
     } catch {
+        return null;
+    }
+}
+
+export function getUser(): User | null {
+    try {
+        const raw = localStorage.getItem("user");
+        if (!raw) return null;
+        return JSON.parse(raw) as User;
+    } catch {
+        return null;
+    }
+}
+
+export function setUser(user: User){
+    try {
+        localStorage.setItem("user", JSON.stringify(user));
+    } catch { 
         return null;
     }
 }
