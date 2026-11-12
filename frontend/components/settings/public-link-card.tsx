@@ -4,14 +4,14 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { PublicLinkField } from "@/components/painel/public-link-field";
-import { getOrganization } from "@/lib/session";
+import { useOrganization } from "@/components/painel/organization-provider";
 import { cn } from "@/lib/utils";
 import { SettingsCard } from "./settings-card";
 
 export function PublicLinkCard(){
 
 
-    const organization = getOrganization();
+    const { organization } = useOrganization();
     const slug = organization?.slug ?? "";
 
 

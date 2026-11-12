@@ -12,10 +12,10 @@ import { AlertCircle, CalendarPlus, Copy } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { getOrganization } from "@/lib/session";
 import { toast } from "sonner";
 import { Empty, EmptyContent, EmptyDescription, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { CancelBookingDialog } from "@/components/bookings/cancel-booking-dialog";
+import { useOrganization } from "@/components/painel/organization-provider";
 
 
 type Booking = {
@@ -49,7 +49,8 @@ export default function AgendamentosPage() {
     const [toCancel, setToCancel] = useState<Booking | null>(null);
     const [cancelPending, setCancelPending] = useState(false);
 
-    const organization = getOrganization();
+    const { organization } = useOrganization();
+
     const organizationSlug = organization?.slug ?? "";
 
     useEffect(() => {

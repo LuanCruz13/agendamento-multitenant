@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSession, getOrganization, clearSession } from "@/lib/session";
+import { getSession, clearSession } from "@/lib/session";
+import { OrganizationProvider, useOrganization } from "@/components/painel/organization-provider";
 import { apiFetch } from "@/lib/api";
 import { PainelSidebar } from "@/components/painel/painel-sidebar";
 import { PainelMobileHeader } from "@/components/painel/painel-mobile-header";
@@ -22,7 +23,20 @@ export default function PainelLayout({ children }: { children: React.ReactNode }
 
     if (!ready) return null;
 
-    const organization = getOrganization();
+    return (
+        <OrganizationProvider>
+            <PainelLayoutContent>{children}</PainelLayoutContent>
+        </OrganizationProvider>
+    );
+
+   
+}
+
+function PainelLayoutContent({ children }: { children: React.ReactNode}){
+
+    const router = useRouter();
+
+    const { organization } = useOrganization();
     const organizationName = organization?.name ?? ""
     const organizationSlug = organization?.slug ?? "";
 
@@ -52,5 +66,5 @@ export default function PainelLayout({ children }: { children: React.ReactNode }
                 <Toaster />
             </div>
         </div>
-    )
+    )   
 }
