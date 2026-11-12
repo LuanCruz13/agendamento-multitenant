@@ -1,5 +1,6 @@
 "use client";
 
+import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, AlertCircle, Loader2, MailCheck } from "lucide-react";
@@ -33,18 +34,12 @@ export function ForgotPasswordForm() {
     const [formError, setFormError] = useState<string | null>(null);
     const [sent, setSent] = useState(false);
     const [sentEmail, setSentEmail] = useState("");
-    const [cooldown, setCooldown] = useState(0);
+    const {cooldown, start: startCooldown} = useResendCooldown(RESEND_COOLDOWN);
 
     const { control, handleSubmit } = useForm<ForgotPasswordValues>({
         resolver: zodResolver(forgotPasswordSchema),
         defaultValues: { email: "" },
     });
-
-    useEffect(() => {
-        if (cooldown <= 0) return;
-        const timer = setTimeout(() => setCooldown((c) => c - 1), 1000);
-        return () => clearTimeout(timer);
-    }, [cooldown]);
 
     async function requestReset(email: string) {
         setFormError(null);
@@ -68,7 +63,7 @@ export function ForgotPasswordForm() {
 
             setSentEmail(email);
             setSent(true);
-            setCooldown(RESEND_COOLDOWN);
+            startCooldown();
         } catch {
             setFormError("Não foi possível conectar ao servidor. Verifique se a API está rodando.");
         } finally {
