@@ -212,7 +212,7 @@ export function OrganizationForm(){
                 open={confirmOpen} 
                 onOpenChange={(open) => !open && !pending && setConfirmOpen(false)}
             >
-                <AlertDialogContent className="max-w-md gap-5 rounded-2xl p-6">
+                <AlertDialogContent className="max-w-md! gap-5 rounded-2xl p-6">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="font-serif text-xl font-semibold tracking-tight">
                             Trocar o endereço do seu link?
@@ -225,19 +225,19 @@ export function OrganizationForm(){
                     <div className="flex flex-col gap-2 rounded-xl border border-border bg-background p-3 text-sm">
                         <div className="flex items-center gap-2">
                             <span className="w-12 shrink-0 text-xs text-muted-foreground">Antes</span>
-                            <span className="truncate text-muted-foreground line-through">
+                            <span className="truncate min-w-0 flex-1 text-muted-foreground line-through">
                                 {host}/agendar/{organization?.slug}
                             </span>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="w-12 shrink-0 text-xs text-muted-foreground">Depois</span>
-                            <span className="truncate font-medium">
+                            <span className="truncate min-w-0 flex-1 font-medium">
                                 {host}/agendar/{form.watch("slug")}
                             </span>
                         </div>
                     </div>
 
-                    <AlertDialogFooter>
+                    <AlertDialogFooter className="-mx-6 -mb-6 rounded-b-2xl">
                         <AlertDialogCancel>Manter endereço atual</AlertDialogCancel>
                         <AlertDialogAction 
                             disabled={pending}
