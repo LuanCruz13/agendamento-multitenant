@@ -5,13 +5,21 @@ import { Resend } from 'resend';
 
 @Injectable()
 export class EmailService {
-    private readonly resend: Resend;
+    private readonly resend: Resend | undefined;
 
     constructor(private readonly configService: ConfigService){
-        this.resend = new Resend(this.configService.getOrThrow<string>('RESEND_API_KEY'));
+        const apiKey = this.configService.get<string>('RESEND_API_KEY');
+        this.resend = apiKey ? new Resend(apiKey) : undefined;
     }
 
     async sendBookingConfirmation(to: string, clientName: string, scheduledAt: Date){
+
+        if (!this.resend){
+            console.log(`[email] Confirmação de agendamento para ${to}: ${clientName} em ${scheduledAt.toISOString()}`);
+            return;
+        }
+
+
         await this.resend.emails.send({
             from: 'onboarding@resend.dev',
             to,
@@ -21,6 +29,13 @@ export class EmailService {
     }
 
     async sendPasswordReset(to: string, resetLink: string){
+
+        if (!this.resend) {
+            console.log(`[email] Link de redefinição de senha para ${to}: ${resetLink}`);
+            return;
+        }
+
+        
         await this.resend.emails.send({
             from: 'onboarding@resend.dev',
             to,
