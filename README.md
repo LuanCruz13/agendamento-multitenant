@@ -117,7 +117,7 @@ Identificadas durante o desenvolvimento e deixadas como estão, com a razão de 
 Pré-requisitos: Node 18+ e Docker (para subir o PostgreSQL localmente). Uma API key do [Resend](https://resend.com) é opcional — sem ela, o backend loga o conteúdo dos e-mails (confirmação de agendamento, link de reset de senha) no console em vez de enviar.
 
 ```bash
-git clone <url-do-repositório (será adicionado aqui posteriormente)>
+git clone https://github.com/LuanCruz13/agendamento-multitenant.git
 cd agendamento-multitenant
 ```
 
