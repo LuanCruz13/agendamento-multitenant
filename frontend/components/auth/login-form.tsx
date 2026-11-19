@@ -124,12 +124,7 @@ export function LoginForm(){
                     Senha
                 </label>
 
-                <Link 
-                    href="/esqueci-senha"
-                    className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-                >
-                    Esqueceu a senha?
-                </Link>
+                
             </div>
 
             <div className="relative">
@@ -154,6 +149,12 @@ export function LoginForm(){
                     {showPassword ? <EyeOff className="size-4"/> : <Eye className="size-4" />}
                 </button>
             </div>
+            <Link 
+                href="/esqueci-senha"
+                className="mt-1 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+                Esqueceu a senha?
+            </Link>
             {errors.password && (
                 <p id="password-error" className="text-sm text-destructive">
                     {errors.password.message}
