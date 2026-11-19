@@ -20,12 +20,16 @@ export class EmailService {
         }
 
 
-        await this.resend.emails.send({
+        const { error } = await this.resend.emails.send({
             from: 'onboarding@resend.dev',
             to,
             subject: 'Agendamento confirmado',
             html: `<p>Olá ${clientName}, seu agendamento foi confirmado para ${scheduledAt.toISOString()}.</p>`,
         });
+
+        if (error){
+            throw new Error(`Resend error: ${error.message}`);
+        }
     }
 
     async sendPasswordReset(to: string, resetLink: string){
@@ -36,12 +40,15 @@ export class EmailService {
         }
 
         
-        await this.resend.emails.send({
+        const { error } = await this.resend.emails.send({
             from: 'onboarding@resend.dev',
             to,
             subject: 'Redefinição de senha',
             html: `<p>Recebemos um pedido para redefinir sua senha. Clique no link abaixo para continuar:</p><p><a href="${resetLink}">${resetLink}</a></p><p>Se você não pediu isso, pode ignorar este e-mail.</p>`
         });
-    }
 
+        if (error) {
+            throw new Error(`Resend error: ${error.message}`);
+        }
+    }
 }
